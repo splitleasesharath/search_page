@@ -315,9 +315,50 @@ def generate_branch_name(
     if not response.success:
         return None, response.output
 
-    branch_name = response.output.strip()
-    logger.info(f"Generated branch name: {branch_name}")
-    return branch_name, None
+    raw_output = response.output.strip()
+
+    # Try to extract a valid branch-like token from potentially verbose output
+    branch_pattern = re.compile(r"([a-z]+-issue-\d+-adw-[a-z0-9]+-[a-z0-9\-]+)")
+    match = branch_pattern.findall(raw_output.lower())
+    if match:
+        candidate = match[-1]
+    else:
+        candidate = raw_output.lower()
+
+    # Sanitize: keep only lowercase letters, numbers, and hyphens
+    sanitized = re.sub(r"[^a-z0-9\-]", "-", candidate)
+    # Collapse multiple hyphens
+    sanitized = re.sub(r"-+", "-", sanitized).strip("-")
+
+    # Ensure required structure; if missing, reconstruct from inputs
+    required_parts_present = ("-issue-" in sanitized) and ("-adw-" in sanitized)
+    if not required_parts_present:
+        # Build concise slug from issue title/body
+        base_text = (issue.title or "change").lower()
+        words = re.findall(r"[a-z0-9]+", base_text)
+        slug = "-".join(words[:6]) or "update"
+        sanitized = f"{issue_type}-issue-{issue.number}-adw-{adw_id}-{slug}"
+
+    # Final length guard
+    if len(sanitized) > 120:
+        sanitized = sanitized[:120].rstrip("-")
+
+    # Validate with git to ensure it's a valid branch ref
+    try:
+        result = subprocess.run(
+            ["git", "check-ref-format", "--branch", sanitized],
+            capture_output=True,
+            text=True,
+            encoding='utf-8',
+        )
+        if result.returncode != 0:
+            return None, f"Invalid branch name generated: {sanitized}. {result.stderr.strip()}"
+    except Exception as e:
+        # If git isn't available in this context, still proceed with sanitized value
+        logger.warning(f"Could not validate branch name with git: {e}")
+
+    logger.info(f"Generated branch name: {sanitized}")
+    return sanitized, None
 
 
 def create_commit(

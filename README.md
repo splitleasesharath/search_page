@@ -1,19 +1,21 @@
-# Split Lease - Islands Architecture
+# Split Lease - Search Page
 
-A modern web application for periodic tenancy rentals using Islands Architecture - combining static HTML pages with interactive React component islands.
+A rental property search interface using Islands Architecture - combining a static HTML page with interactive React component islands for filtering and displaying search results.
 
 ## Overview
 
-Split Lease is a rental platform that enables users to rent properties for specific days of the week (e.g., weeknights, weekends, or custom schedules). The application uses an Islands Architecture pattern where static HTML pages are enhanced with interactive React components loaded as UMD bundles.
+This is the search page for Split Lease, a rental platform that enables users to find and rent properties for specific days of the week (e.g., weeknights, weekends, or custom schedules). The page uses an Islands Architecture pattern where a static HTML page is enhanced with interactive React components loaded as ESM/UMD bundles.
 
 ## Features
 
 - 🏝️ **Islands Architecture**: Static HTML with React component islands
 - 📅 **Interactive Schedule Selector**: Visual day-of-week picker with drag selection
+- 🔍 **Search Filters**: Price range, bedrooms, amenities, and more
+- 🗺️ **Map Integration**: Interactive map view for listing locations
 - 🎨 **Styled Components**: Fully styled with styled-components and Framer Motion animations
 - ⚡ **Fast Loading**: Minimal JavaScript, CDN-based React, progressive enhancement
 - 📱 **Responsive Design**: Mobile-first design with responsive layouts
-- 🔧 **UMD Bundle**: Components exposed as `window.SplitLeaseComponents`
+- 🔧 **ESM/UMD Bundle**: Components exposed as `window.SplitLeaseComponents`
 
 ## Prerequisites
 
@@ -21,39 +23,38 @@ Split Lease is a rental platform that enables users to rent properties for speci
 - npm 9.0.0+
 - Modern web browser (ES2020 support)
 
-> **Note:** This project contains two separate Node.js packages (root app and components). See [Dependency Management Guide](docs/dependency-management.md) for best practices on managing dependencies and resolving merge conflicts.
-
 ## Project Structure
 
 ```
 app/split-lease/
-├── components/              # React components library (UMD bundle)
+├── components/              # React components library (ESM/UMD bundle)
 │   ├── src/
-│   │   └── SearchScheduleSelector/
-│   │       ├── SearchScheduleSelector.tsx
-│   │       ├── SearchScheduleSelector.styles.ts
-│   │       ├── types.ts
-│   │       └── index.ts
+│   │   ├── SearchScheduleSelector/
+│   │   │   ├── SearchScheduleSelector.tsx
+│   │   │   ├── SearchScheduleSelector.styles.ts
+│   │   │   ├── types.ts
+│   │   │   └── index.ts
+│   │   └── ... (other search-related components)
 │   ├── dist/               # Built UMD bundle (generated)
 │   ├── package.json
 │   ├── vite.config.ts
 │   └── tsconfig.json
 │
-├── pages/                  # Static HTML pages with islands
-│   ├── index.html         # Home page
-│   ├── home/
-│   │   ├── css/
-│   │   ├── images/
-│   │   └── js/
-│   ├── search/
-│   │   ├── index.html     # Search page
-│   │   ├── css/
-│   │   └── js/
-│   └── shared/
-│       ├── images/
+├── pages/
+│   └── search/             # Search page
+│       ├── index.html      # Main search page
+│       ├── css/
 │       └── js/
 │
-└── __init_all__.patch     # Project documentation
+├── api/                    # API client for backend integration
+│   ├── client.ts
+│   ├── listings.ts
+│   └── index.ts
+│
+└── types/                  # TypeScript type definitions
+    ├── models.ts
+    ├── api.ts
+    └── index.ts
 ```
 
 ## Setup and Installation
@@ -73,16 +74,15 @@ npm run build
 ```
 
 This generates:
-- `dist/split-lease-components.umd.cjs` - UMD bundle
+- `dist/split-lease-components.umd.js` - UMD bundle
 - `dist/style.css` - Component styles
 
-### 3. View Pages
+### 3. View Search Page
 
-Open the HTML files in your browser:
-- Home page: `pages/index.html`
-- Search page: `pages/search/index.html`
+Open the search page in your browser:
+- Search page: `app/split-lease/pages/search/index.html`
 
-No build step required for pages - they load React via CDN and include the UMD bundle.
+No build step required for the page - it loads React via CDN and includes the UMD bundle.
 
 ## Component Development
 
@@ -92,55 +92,14 @@ No build step required for pages - they load React via CDN and include the UMD b
 cd components
 npm run build        # Build UMD bundle
 npm run typecheck    # Type check without emitting
+npm run test         # Run unit tests
 ```
 
-### Adding New Components
+### SearchScheduleSelector Component
 
-1. Create a new folder under `components/src/YourComponent/`
-2. Add `YourComponent.tsx`, `YourComponent.styles.ts`, `types.ts`, and `index.ts`
-3. Export the component from `components/src/index.ts`
-4. Run `npm run build` in the `components/` directory
-5. Use in pages via `window.SplitLeaseComponents.YourComponent`
+The main interactive component for selecting weekly rental schedules on the search page.
 
-Example component structure:
-```typescript
-// components/src/YourComponent/index.ts
-export { YourComponent } from './YourComponent';
-export type { YourComponentProps } from './types';
-```
-
-### Using Components in Pages
-
-Components are mounted as islands using React's `createRoot`:
-
-```html
-<!-- Include React CDN -->
-<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-
-<!-- Include components bundle -->
-<script src="../components/dist/split-lease-components.umd.cjs"></script>
-
-<!-- Mount island -->
-<div id="search-selector"></div>
-<script>
-  const { SearchScheduleSelector } = window.SplitLeaseComponents || {};
-  if (SearchScheduleSelector) {
-    ReactDOM.createRoot(document.getElementById('search-selector'))
-      .render(React.createElement(SearchScheduleSelector, {
-        minDays: 2,
-        maxDays: 5,
-        requireContiguous: true
-      }));
-  }
-</script>
-```
-
-## SearchScheduleSelector Component
-
-The main component for selecting weekly rental schedules.
-
-### Props
+#### Props
 
 ```typescript
 interface SearchScheduleSelectorProps {
@@ -155,14 +114,48 @@ interface SearchScheduleSelectorProps {
 }
 ```
 
-### Features
+#### Features
 
 - **Drag Selection**: Click and drag to select multiple days
 - **Click Toggle**: Single click to toggle individual days
 - **Validation**: Real-time validation with error messages
 - **Contiguous Days**: Optional enforcement of consecutive day selection
 - **Animations**: Smooth transitions using Framer Motion
-- **Match Counts**: Shows exact and partial listing matches (placeholder)
+- **Match Counts**: Shows exact and partial listing matches
+
+### Using Components in the Search Page
+
+Components are mounted as islands using React's `createRoot`:
+
+```html
+<!-- Include React CDN -->
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
+<!-- Include component styles -->
+<link rel="stylesheet" href="../../components/dist/style.css">
+
+<!-- Include components bundle -->
+<script src="../../components/dist/split-lease-components.umd.js"></script>
+
+<!-- Mount island -->
+<div id="schedule-selector-island"></div>
+<script>
+  const { SearchScheduleSelector } = window.SplitLeaseComponents || {};
+  if (SearchScheduleSelector) {
+    ReactDOM.createRoot(document.getElementById('schedule-selector-island'))
+      .render(React.createElement(SearchScheduleSelector, {
+        minDays: 2,
+        maxDays: 5,
+        requireContiguous: true,
+        onSelectionChange: (selectedDays) => {
+          console.log('Selected days:', selectedDays);
+          // Update search results, map, filters, etc.
+        }
+      }));
+  }
+</script>
+```
 
 ## Architecture Pattern
 
@@ -176,9 +169,9 @@ interface SearchScheduleSelectorProps {
 
 ### How It Works
 
-1. Static HTML pages define the structure and content
+1. Static HTML page defines the structure and content
 2. React components are built as a UMD bundle
-3. Pages include React via CDN and the components bundle
+3. Page includes React via CDN and the components bundle
 4. Islands are mounted at specific DOM nodes using `ReactDOM.createRoot`
 5. Components are fully isolated and self-contained
 
@@ -193,7 +186,7 @@ interface SearchScheduleSelectorProps {
 
 ### For Page Changes
 
-1. Edit HTML, CSS, or JS files in `pages/`
+1. Edit HTML, CSS, or JS files in `pages/search/`
 2. Refresh the browser (no build step needed)
 
 ## Technology Stack
@@ -211,40 +204,104 @@ interface SearchScheduleSelectorProps {
 - React 18 compatible
 - CSS Grid and Flexbox support required
 
-## Pages Overview
+## Search Page Features
 
-### Home Page (`pages/index.html`)
-- Hero section with schedule selector
-- Value propositions
-- Listing previews
-- Call-to-action sections
-- Footer and navigation
+### Interactive Components (Islands)
 
-### Search Page (`pages/search/index.html`)
-- Search filters sidebar
-- Results grid placeholder
-- Map preview placeholder
+- **Schedule Selector**: Day-of-week picker for rental schedules
+- **Filters Panel**: Price range, bedrooms, bathrooms, amenities
+- **Results Grid**: Listing cards with images and details
+- **Map View**: Interactive map showing listing locations
+- **Sort Controls**: Sort by price, relevance, distance
+
+### Static Content
+
+- Header with navigation
+- Search bar
+- Footer with links
+- SEO meta tags and structured data
+
+## Testing
+
+### Component Testing
+
+```bash
+cd components
+npm run test              # Run all tests
+npm run test:watch        # Watch mode
+npm run test:coverage     # Coverage report
+```
+
+### Visual Testing
+
+Open the test harness preview:
+- `app/test-harness/previews/search-schedule-selector-preview.html`
+
+This provides an interactive testing environment with:
+- Live component configuration
+- Console output monitoring
+- Manual test instructions
+- Visual feedback
+
+### End-to-End Testing
+
+```bash
+cd app/split-lease
+npm run test:e2e         # Run Playwright tests
+```
+
+## API Integration
+
+The search page integrates with the backend API through the `api/` directory:
+
+```typescript
+import { searchListings } from './api/listings';
+
+// Search for listings matching the selected schedule
+const results = await searchListings({
+  schedule: selectedDays,
+  priceRange: [min, max],
+  bedrooms: 2,
+  // ... other filters
+});
+```
+
+See `app/split-lease/api/README.md` for API documentation.
+
+## Future Enhancements
+
+- Additional filter components (amenities, property type)
+- Saved searches and favorites
+- Real-time availability updates
+- Enhanced map interactions with clustering
+- Comparison tool for multiple listings
+- Advanced sorting options
 
 ## Troubleshooting
 
-### Common Issues
+### Components Not Building
 
-#### Merge Conflicts in package.json or package-lock.json
-
-This project contains two separate Node.js packages, which can lead to merge conflicts when multiple branches update dependencies.
-
-**Quick Fix:**
+Make sure you run npm install in the correct directory:
 ```bash
-./scripts/resolve-package-conflicts.sh
+cd app/split-lease/components
+npm install
+npm run build
 ```
 
-**Manual Resolution:**
-1. For `package-lock.json` conflicts: Delete the file and run `npm install` in the affected directory
-2. For `package.json` conflicts: Manually resolve, then run `node scripts/sort-package-deps.mjs`
+### Components Not Loading in Browser
 
-See the [Dependency Management Guide](docs/dependency-management.md) for detailed instructions.
+1. Check that the UMD bundle was built: `components/dist/split-lease-components.umd.js`
+2. Check browser console for errors
+3. Verify the script paths in the HTML are correct
+4. Ensure React CDN scripts are loaded before the component bundle
 
-#### Build Errors After npm install
+### Styles Not Applying
+
+1. Verify `components/dist/style.css` exists
+2. Check that the CSS is loaded before the component renders
+3. Inspect the browser to see if styles are being overridden
+
+### Node Version Issues
 
 Ensure you're using the correct Node.js and npm versions:
 ```bash
@@ -256,22 +313,3 @@ Use nvm to switch versions:
 ```bash
 nvm use  # Uses the version specified in .nvmrc
 ```
-
-#### Components Not Building
-
-Make sure you run npm install in the correct directory:
-```bash
-cd app/split-lease/components
-npm install
-npm run build
-```
-
-For more troubleshooting help, see [docs/dependency-management.md](docs/dependency-management.md).
-
-## Future Enhancements
-
-- Additional interactive components (filters, map, listings grid)
-- Server-side rendering for initial state
-- API integration for real listing data
-- User authentication islands
-- Booking flow components

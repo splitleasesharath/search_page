@@ -41,6 +41,22 @@ def create_worktree(adw_id: str, branch_name: str, logger: logging.Logger) -> Tu
         logger.warning(f"Worktree already exists at {worktree_path}")
         return worktree_path, None
     
+    # Validate branch name early to avoid confusing git errors
+    try:
+        check = subprocess.run(
+            ["git", "check-ref-format", "--branch", branch_name],
+            capture_output=True,
+            text=True,
+            encoding='utf-8',
+            cwd=project_root,
+        )
+        if check.returncode != 0:
+            error_msg = f"Invalid branch name '{branch_name}': {check.stderr.strip()}"
+            logger.error(error_msg)
+            return None, error_msg
+    except Exception as e:
+        logger.warning(f"Could not validate branch name with git: {e}")
+
     # First, fetch latest changes from origin
     logger.info("Fetching latest changes from origin")
     fetch_result = subprocess.run(
