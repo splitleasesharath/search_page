@@ -8,3 +8,4 @@
  */
 
 export { SplitLeaseAPI, apiClient } from './client';
+export * from './search';

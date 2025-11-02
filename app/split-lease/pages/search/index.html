@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Search for rental listings on Split Lease - Find properties that match your weekly schedule and budget.">
+  <meta property="og:title" content="Search Properties - Split Lease">
+  <meta property="og:description" content="Find rental listings that match your schedule and budget.">
+  <meta property="og:type" content="website">
+  <title>Search Properties - Split Lease</title>
+
+  <!-- Component Styles -->
+  <link rel="stylesheet" href="../../components/dist/style.css">
+
+  <!-- Page Styles -->
+  <link rel="stylesheet" href="./css/search.css">
+
+  <!-- React from CDN (Production) -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
+  <!-- Component Library UMD Bundle -->
+  <script src="../../components/dist/split-lease-components.umd.js"></script>
+</head>
+<body>
+  <!-- Header -->
+  <header id="site-header" data-component="header" data-logo-src="/logo.png"></header>
+
+  <!-- Main Content -->
+  <main class="search-page">
+    <div class="search-container">
+      <!-- Sidebar Filters -->
+      <aside class="sidebar">
+        <h2 class="sidebar-title">Filters</h2>
+        <div id="search-filters-island" data-component="search-filters" data-manual-mount="true"></div>
+
+        <div class="schedule-selector-container">
+          <h3 class="section-title">Select Your Schedule</h3>
+          <div id="schedule-selector-island" data-component="search-schedule-selector" data-manual-mount="true"></div>
+        </div>
+      </aside>
+
+      <!-- Main Content Area -->
+      <div class="main-content">
+        <!-- Results Header -->
+        <div class="results-header">
+          <h1 class="page-title">Search Results</h1>
+        </div>
+
+        <!-- Search Results Grid -->
+        <div id="search-results-island" data-component="search-results" data-manual-mount="true"></div>
+
+        <!-- Map View -->
+        <div class="map-container">
+          <h2 class="section-title">Map View</h2>
+          <div id="search-map-island" data-component="search-map" data-manual-mount="true"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer id="site-footer"></footer>
+
+  <!-- Page Initialization Script -->
+  <script src="./js/search.js"></script>
+</body>
+</html>

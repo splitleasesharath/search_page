@@ -10,11 +10,25 @@
 // ============================================================================
 // Existing Components
 // ============================================================================
-// TODO: Re-enable these exports when components are created
-// export { default as SearchScheduleSelector } from './SearchScheduleSelector';
 export { Footer } from './Footer';
 export { default as Header } from './Header/Header';
 export type { HeaderProps } from './Header/Header';
+
+// ============================================================================
+// Search Components
+// ============================================================================
+export { SearchScheduleSelector } from './SearchScheduleSelector';
+export type { SearchScheduleSelectorProps, Day, ValidationResult } from './SearchScheduleSelector';
+
+export { SearchFilters } from './SearchFilters';
+export type { SearchFiltersProps } from './SearchFilters';
+
+export { SearchResults } from './SearchResults';
+export type { SearchResultsProps } from './SearchResults';
+
+export { SearchMap } from './SearchMap';
+export type { SearchMapProps } from './SearchMap';
+export type { MapMarker } from './SearchMap/types';
 
 // export { ListingImageGrid } from './ListingImageGrid';
 // export type { ListingImage, ListingImageGridProps } from './ListingImageGrid';

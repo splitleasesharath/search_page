@@ -13,3 +13,6 @@ export * from './models';
 
 // Export all API types and schemas
 export * from './api';
+
+// Export all search types and schemas
+export * from './search';
