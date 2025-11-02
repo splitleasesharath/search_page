@@ -79,3 +79,17 @@ This prompt helps you determine what documentation you should read based on the 
     - When troubleshooting Header component styling, dropdowns, or mobile menu
     - When implementing accessibility features (WCAG 2.1 AA compliance)
     - When working with data attribute parsing for island mounting
+
+- app_docs/feature-11-esm-react-island-search-page.md
+  - Conditions:
+    - When working with the search page or search functionality
+    - When implementing schedule-based filtering or weekly rental patterns
+    - When working with ESM + React Islands architecture for new features
+    - When implementing filter panels, listing grids, or map views
+    - When setting up Vite-based component libraries with UMD bundles
+    - When implementing URL parameter handling for shareable search states
+    - When working with Supabase API integration for listings data
+    - When implementing responsive grid layouts with CSS breakpoints
+    - When setting up centralized state management with pub/sub patterns
+    - When troubleshooting TypeScript type definitions for domain models
+    - When implementing day-of-week selectors or schedule validation logic
