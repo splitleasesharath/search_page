@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Search Split Lease Rentals - Find your perfect weekly rental in NYC. Rent by specific days of the week with flexible schedules.">
+
+  <!-- Open Graph / Social Media -->
+  <meta property="og:title" content="Search Split Lease Rentals | Find Your Perfect Weekly Rental">
+  <meta property="og:description" content="Find rentals by specific days of the week. Perfect for remote workers, commuters, and flexible lifestyles.">
+  <meta property="og:type" content="website">
+
+  <title>Search Split Lease Rentals | Find Your Perfect Weekly Rental</title>
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/responsive.css">
+
+  <!-- Preload critical assets -->
+  <link rel="preload" href="../../components/dist/split-lease-components.umd.js" as="script">
+</head>
+<body>
+  <div class="page-wrapper">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-content">
+        <div class="logo">Split Lease</div>
+        <nav class="nav">
+          <a href="/">Home</a>
+          <a href="/search">Search</a>
+          <a href="/about">About</a>
+          <a href="/login">Login</a>
+        </nav>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+      <!-- Search Hero -->
+      <section class="search-hero">
+        <h1>Find Your Perfect Rental</h1>
+        <p>Search for rentals by specific days of the week. Perfect for remote workers, commuters, and flexible lifestyles.</p>
+
+        <!-- Schedule Selector Island -->
+        <div id="schedule-selector-island"></div>
+      </section>
+
+      <!-- Search Container -->
+      <div class="search-container">
+        <!-- Filters Sidebar -->
+        <aside class="search-sidebar">
+          <div id="filters-panel-island"></div>
+        </aside>
+
+        <!-- Results Content -->
+        <section class="search-content">
+          <!-- Map View (Optional Toggle) -->
+          <div id="map-view-island" style="margin-bottom: 24px; display: none;"></div>
+
+          <!-- Listings Grid -->
+          <div id="listings-grid-island"></div>
+        </section>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="footer-content">
+        <p>&copy; 2025 Split Lease. All rights reserved.</p>
+        <p>Find rentals by specific days of the week.</p>
+      </div>
+    </footer>
+  </div>
+
+  <!-- React and ReactDOM from CDN -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
+  <!-- Component Bundle -->
+  <script src="../../components/dist/split-lease-components.umd.js"></script>
+
+  <!-- Page Scripts -->
+  <script src="js/url-params.js"></script>
+  <script src="js/search-state.js"></script>
+  <script src="js/islands.js"></script>
+</body>
+</html>

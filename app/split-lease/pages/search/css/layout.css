@@ -1,0 +1,144 @@
+/**
+ * Layout styles for search page
+ */
+
+.page-wrapper {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header */
+.header {
+  background: white;
+  border-bottom: 1px solid var(--color-gray-200);
+  padding: var(--spacing-md) var(--spacing-lg);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: var(--shadow-sm);
+}
+
+.header-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.nav {
+  display: flex;
+  gap: var(--spacing-lg);
+  align-items: center;
+}
+
+.nav a {
+  font-weight: 500;
+  color: var(--color-gray-700);
+}
+
+.nav a:hover {
+  color: var(--color-primary);
+}
+
+/* Main content */
+.main {
+  flex: 1;
+  max-width: 1400px;
+  width: 100%;
+  margin: 0 auto;
+  padding: var(--spacing-lg);
+}
+
+/* Search container */
+.search-container {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: var(--spacing-lg);
+  align-items: start;
+}
+
+.search-sidebar {
+  position: sticky;
+  top: calc(80px + var(--spacing-lg));
+}
+
+.search-content {
+  min-width: 0;
+}
+
+/* Search hero */
+.search-hero {
+  background: white;
+  padding: var(--spacing-xl);
+  border-radius: var(--radius-xl);
+  margin-bottom: var(--spacing-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.search-hero h1 {
+  margin-bottom: var(--spacing-md);
+}
+
+.search-hero p {
+  color: var(--color-gray-600);
+  margin-bottom: var(--spacing-lg);
+}
+
+/* Island mount points */
+#schedule-selector-island,
+#filters-panel-island,
+#listings-grid-island,
+#map-view-island {
+  background: white;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+#schedule-selector-island {
+  margin-bottom: var(--spacing-lg);
+}
+
+#filters-panel-island {
+  background: transparent;
+}
+
+/* Footer */
+.footer {
+  background: white;
+  border-top: 1px solid var(--color-gray-200);
+  padding: var(--spacing-xl) var(--spacing-lg);
+  margin-top: var(--spacing-2xl);
+}
+
+.footer-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  text-align: center;
+  color: var(--color-gray-600);
+  font-size: var(--font-size-sm);
+}
+
+/* Utility classes */
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-lg);
+}
+
+.text-center {
+  text-align: center;
+}
+
+.mb-0 { margin-bottom: 0; }
+.mb-1 { margin-bottom: var(--spacing-sm); }
+.mb-2 { margin-bottom: var(--spacing-md); }
+.mb-3 { margin-bottom: var(--spacing-lg); }
+.mb-4 { margin-bottom: var(--spacing-xl); }
