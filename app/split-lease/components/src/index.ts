@@ -10,8 +10,15 @@
 // ============================================================================
 // Existing Components
 // ============================================================================
-// TODO: Implement SearchScheduleSelector component
-// export { default as SearchScheduleSelector } from './SearchScheduleSelector';
+export { SearchScheduleSelector } from './SearchScheduleSelector';
+export type {
+  Day,
+  Listing as ScheduleListing,
+  SearchScheduleSelectorProps,
+  ValidationResult,
+  ListingCount,
+} from './SearchScheduleSelector';
+
 export { Footer } from './Footer';
 export { Header } from './Header';
 
@@ -62,6 +69,27 @@ export type { PopularListingsProps } from './organisms/PopularListings';
 
 export { SupportSection } from './organisms/SupportSection';
 export type { SupportSectionProps, SupportOption } from './organisms/SupportSection';
+
+// ============================================================================
+// Search Filter Components
+// ============================================================================
+export { FilterSidebar } from './filters/FilterSidebar';
+export type { FilterSidebarProps } from './filters/FilterSidebar';
+
+export { BoroughFilter } from './filters/BoroughFilter';
+export type { BoroughFilterProps } from './filters/BoroughFilter';
+
+export { WeekPatternFilter } from './filters/WeekPatternFilter';
+export type { WeekPatternFilterProps } from './filters/WeekPatternFilter';
+
+export { PriceTierFilter } from './filters/PriceTierFilter';
+export type { PriceTierFilterProps } from './filters/PriceTierFilter';
+
+export { SortByFilter } from './filters/SortByFilter';
+export type { SortByFilterProps } from './filters/SortByFilter';
+
+export { NeighborhoodFilter } from './filters/NeighborhoodFilter';
+export type { NeighborhoodFilterProps } from './filters/NeighborhoodFilter';
 
 // ============================================================================
 // Template Components
