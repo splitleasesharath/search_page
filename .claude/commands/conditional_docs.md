@@ -79,3 +79,16 @@ This prompt helps you determine what documentation you should read based on the 
     - When troubleshooting Header component styling, dropdowns, or mobile menu
     - When implementing accessibility features (WCAG 2.1 AA compliance)
     - When working with data attribute parsing for island mounting
+
+- app_docs/feature-480344e4-search-page-filters.md
+  - Conditions:
+    - When working with the search page or search-related features
+    - When implementing or modifying filter components (Borough, Price, Week Pattern, Sort By, Neighborhood)
+    - When working with the SearchScheduleSelector day-of-week picker
+    - When implementing search UI components with React Islands architecture
+    - When integrating Supabase database queries for search results
+    - When implementing Google Maps integration for listing locations
+    - When troubleshooting search filter state management or interactions
+    - When working with styled-components for search page styling
+    - When implementing responsive layouts for filter sidebars
+    - When building new filter molecules or organisms following atomic design
