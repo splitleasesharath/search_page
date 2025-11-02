@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Search for weekly rental properties in NYC and NJ with Split Lease marketplace">
+    <title>Search Listings | Split Lease</title>
+
+    <!-- Component Library Styles -->
+    <link rel="stylesheet" href="../../components/dist/style.css">
+
+    <!-- Search Page Styles -->
+    <link rel="stylesheet" href="css/search.css">
+
+    <!-- React 18 CDN -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+</head>
+<body>
+    <!-- Header/Navigation -->
+    <header id="header-container">
+        <div id="header"></div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="search-page">
+        <div class="search-container">
+            <!-- Filter Sidebar (Left Column) -->
+            <aside class="filter-sidebar">
+                <div class="filter-section">
+                    <h2 class="filter-title">Search Filters</h2>
+
+                    <!-- React Island: Search Filters -->
+                    <div id="search-filters"></div>
+                </div>
+            </aside>
+
+            <!-- Results and Map Area (Right Column) -->
+            <section class="results-section">
+                <!-- Map Container -->
+                <div class="map-section">
+                    <!-- React Island: Map Placeholder -->
+                    <div id="map-container"></div>
+                </div>
+
+                <!-- Listings Grid -->
+                <div class="listings-section">
+                    <div class="listings-header">
+                        <h2 id="listings-count">Loading listings...</h2>
+                    </div>
+
+                    <!-- React Island: Listings Grid -->
+                    <div id="listings-grid"></div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer id="footer-container">
+        <div id="footer"></div>
+    </footer>
+
+    <!-- Component Library UMD Bundle -->
+    <script src="../../components/dist/split-lease-components.umd.js"></script>
+
+    <!-- Island Mounting Script -->
+    <script src="js/search-islands.js"></script>
+</body>
+</html>

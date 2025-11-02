@@ -1,0 +1,163 @@
+/* Search Page Styles */
+
+:root {
+    --primary-color: #1a73e8;
+    --secondary-color: #34a853;
+    --text-color: #202124;
+    --border-color: #dadce0;
+    --background-color: #f8f9fa;
+    --sidebar-width: 320px;
+    --header-height: 64px;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    color: var(--text-color);
+    background-color: var(--background-color);
+    line-height: 1.6;
+}
+
+/* Main Search Page Layout */
+.search-page {
+    min-height: calc(100vh - var(--header-height));
+    padding-top: var(--header-height);
+}
+
+.search-container {
+    display: grid;
+    grid-template-columns: var(--sidebar-width) 1fr;
+    gap: 0;
+    max-width: 100%;
+    margin: 0;
+    height: calc(100vh - var(--header-height));
+}
+
+/* Filter Sidebar */
+.filter-sidebar {
+    background-color: #ffffff;
+    border-right: 1px solid var(--border-color);
+    overflow-y: auto;
+    position: sticky;
+    top: var(--header-height);
+    height: calc(100vh - var(--header-height));
+}
+
+.filter-section {
+    padding: 24px 20px;
+}
+
+.filter-title {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: var(--text-color);
+}
+
+/* Results Section */
+.results-section {
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    height: calc(100vh - var(--header-height));
+}
+
+/* Map Section */
+.map-section {
+    width: 100%;
+    height: 400px;
+    background-color: #e0e0e0;
+    border-bottom: 1px solid var(--border-color);
+    position: relative;
+}
+
+/* Listings Section */
+.listings-section {
+    padding: 24px;
+    flex: 1;
+}
+
+.listings-header {
+    margin-bottom: 20px;
+}
+
+.listings-header h2 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .search-container {
+        grid-template-columns: 280px 1fr;
+    }
+
+    :root {
+        --sidebar-width: 280px;
+    }
+}
+
+@media (max-width: 768px) {
+    .search-container {
+        grid-template-columns: 1fr;
+        height: auto;
+    }
+
+    .filter-sidebar {
+        position: relative;
+        top: 0;
+        height: auto;
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .map-section {
+        height: 300px;
+    }
+
+    .results-section {
+        height: auto;
+        overflow-y: visible;
+    }
+}
+
+@media (max-width: 480px) {
+    .filter-section {
+        padding: 16px 12px;
+    }
+
+    .listings-section {
+        padding: 16px 12px;
+    }
+
+    .filter-title {
+        font-size: 18px;
+    }
+
+    .map-section {
+        height: 250px;
+    }
+}
+
+/* Header and Footer Containers */
+#header-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background-color: #ffffff;
+    border-bottom: 1px solid var(--border-color);
+    height: var(--header-height);
+}
+
+#footer-container {
+    background-color: #ffffff;
+    border-top: 1px solid var(--border-color);
+}

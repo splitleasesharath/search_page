@@ -47,6 +47,31 @@ export { SupportSection } from './organisms/SupportSection';
 export type { SupportSectionProps, SupportOption } from './organisms/SupportSection';
 
 // ============================================================================
+// Search Page Components
+// ============================================================================
+export { SearchFilters } from './SearchFilters';
+export type { SearchFiltersProps, FilterState, FilterChangeHandler } from './SearchFilters';
+
+export { BoroughFilter } from './BoroughFilter';
+export type { BoroughFilterProps } from './BoroughFilter';
+
+export { PriceTierFilter } from './PriceTierFilter';
+export type { PriceTierFilterProps } from './PriceTierFilter';
+
+export { WeekPatternFilter } from './WeekPatternFilter';
+export type { WeekPatternFilterProps } from './WeekPatternFilter';
+
+export { SortFilter } from './SortFilter';
+export type { SortFilterProps } from './SortFilter';
+
+export { MapPlaceholder } from './MapPlaceholder';
+export type { MapPlaceholderProps } from './MapPlaceholder';
+
+export { ListingsGrid } from './ListingsGrid';
+export type { ListingsGridProps } from './ListingsGrid';
+export type { Listing as ListingGridItem } from './ListingsGrid';
+
+// ============================================================================
 // Template Components
 // ============================================================================
 // TODO: Export template components as they are created
