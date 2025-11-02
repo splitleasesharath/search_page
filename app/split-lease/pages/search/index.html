@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Listings - Split Lease</title>
+
+    <!-- Page CSS -->
+    <link rel="stylesheet" href="css/search.css">
+
+    <!-- Component Library CSS -->
+    <link rel="stylesheet" href="../../components/dist/assets/style.css">
+</head>
+<body>
+    <div class="page-container">
+        <!-- Header / Navigation would go here -->
+        <header class="page-header">
+            <h1>Find Your Perfect Split Lease</h1>
+        </header>
+
+        <!-- Main Search Grid: Filters | Results | Map -->
+        <main class="search-container">
+            <!-- Left Sidebar: Filters -->
+            <aside class="search-filters-section">
+                <div id="search-filters" class="island-mount-point"></div>
+            </aside>
+
+            <!-- Center: Search Results -->
+            <section class="search-results-section">
+                <div id="search-results" class="island-mount-point"></div>
+            </section>
+
+            <!-- Right: Map -->
+            <aside class="search-map-section">
+                <div id="search-map" class="island-mount-point"></div>
+            </aside>
+        </main>
+
+        <!-- Footer would go here -->
+        <footer class="page-footer">
+            <p>&copy; 2025 Split Lease. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <!-- React 18 from CDN -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
+    <!-- Component Library UMD Bundle -->
+    <script src="../../components/dist/split-lease-components.umd.js"></script>
+
+    <!-- Island Mounting Script -->
+    <script src="js/mount-filters.js"></script>
+</body>
+</html>

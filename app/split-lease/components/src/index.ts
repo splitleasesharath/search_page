@@ -10,8 +10,9 @@
 // ============================================================================
 // Existing Components
 // ============================================================================
-// TODO: Export these components as they are created
-// export { default as SearchScheduleSelector } from './SearchScheduleSelector';
+export { SearchScheduleSelector } from './SearchScheduleSelector';
+export type { SearchScheduleSelectorProps, Day, ScheduleValidation } from './SearchScheduleSelector';
+
 export { Footer } from './Footer';
 export { default as Header } from './Header/Header';
 
@@ -44,6 +45,25 @@ export { default as Header } from './Header/Header';
 export { ListingCard } from './molecules/ListingCard';
 export type { ListingCardProps, Listing } from './molecules/ListingCard';
 
+export { BoroughSelector } from './molecules/BoroughSelector';
+export type { BoroughSelectorProps, Borough } from './molecules/BoroughSelector';
+export { BOROUGH_OPTIONS } from './molecules/BoroughSelector';
+
+export { WeekPatternSelector } from './molecules/WeekPatternSelector';
+export type { WeekPatternSelectorProps, WeekPattern } from './molecules/WeekPatternSelector';
+export { WEEK_PATTERN_OPTIONS } from './molecules/WeekPatternSelector';
+
+export { PriceTierSelector } from './molecules/PriceTierSelector';
+export type { PriceTierSelectorProps, PriceTier } from './molecules/PriceTierSelector';
+export { PRICE_TIER_OPTIONS } from './molecules/PriceTierSelector';
+
+export { SortBySelector } from './molecules/SortBySelector';
+export type { SortBySelectorProps, SortOption } from './molecules/SortBySelector';
+export { SORT_OPTIONS } from './molecules/SortBySelector';
+
+export { NeighborhoodSearch } from './molecules/NeighborhoodSearch';
+export type { NeighborhoodSearchProps, Neighborhood } from './molecules/NeighborhoodSearch';
+
 // ============================================================================
 // Organism Components
 // ============================================================================
@@ -61,6 +81,15 @@ export type { PopularListingsProps } from './organisms/PopularListings';
 
 export { SupportSection } from './organisms/SupportSection';
 export type { SupportSectionProps, SupportOption } from './organisms/SupportSection';
+
+export { SearchFilters } from './organisms/SearchFilters';
+export type { SearchFiltersProps, SearchFiltersState } from './organisms/SearchFilters';
+
+export { SearchResults } from './organisms/SearchResults';
+export type { SearchResultsProps } from './organisms/SearchResults';
+
+export { SearchMap } from './organisms/SearchMap';
+export type { SearchMapProps } from './organisms/SearchMap';
 
 // ============================================================================
 // Template Components
