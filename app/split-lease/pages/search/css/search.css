@@ -1,0 +1,392 @@
+/**
+ * Search Page Styles
+ *
+ * Layout and styling for the split lease property search page.
+ * Uses CSS Grid for responsive 2-column layout (filters + content).
+ */
+
+/* ============================================================================
+   CSS Reset and Base Styles
+   ============================================================================ */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background-color: #f5f5f5;
+  color: #333333;
+  line-height: 1.6;
+}
+
+/* Screen reader only content */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* ============================================================================
+   Search Page Layout
+   ============================================================================ */
+
+.search-page {
+  min-height: 100vh;
+  padding: 24px;
+}
+
+.search-container {
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  gap: 24px;
+  max-width: 1920px;
+  margin: 0 auto;
+}
+
+/* ============================================================================
+   Filters Sidebar
+   ============================================================================ */
+
+.filters-sidebar {
+  position: sticky;
+  top: 24px;
+  align-self: start;
+  height: fit-content;
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+}
+
+/* Custom scrollbar for filters sidebar */
+.filters-sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.filters-sidebar::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.filters-sidebar::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 3px;
+}
+
+.filters-sidebar::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* ============================================================================
+   Main Content Area
+   ============================================================================ */
+
+.main-content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ============================================================================
+   Map Section (Skeletal Placeholder)
+   ============================================================================ */
+
+.map-section {
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  height: 500px;
+  position: relative;
+}
+
+.map-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+  border: 2px dashed #2196f3;
+}
+
+.map-placeholder-content {
+  text-align: center;
+  padding: 48px;
+  max-width: 500px;
+}
+
+.map-icon {
+  font-size: 64px;
+  display: block;
+  margin-bottom: 24px;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.8;
+  }
+}
+
+.map-placeholder-content h2 {
+  margin: 0 0 16px 0;
+  font-size: 28px;
+  font-weight: 700;
+  color: #1976d2;
+}
+
+.map-placeholder-content p {
+  margin: 8px 0;
+  font-size: 16px;
+  color: #424242;
+  line-height: 1.5;
+}
+
+.map-note {
+  margin-top: 24px !important;
+  padding: 12px 16px;
+  background-color: rgba(255, 255, 255, 0.8);
+  border-left: 4px solid #ff9800;
+  border-radius: 4px;
+  font-size: 14px !important;
+  font-style: italic;
+  color: #f57c00 !important;
+}
+
+/* ============================================================================
+   Results Section (Skeletal Placeholder)
+   ============================================================================ */
+
+.results-section {
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 24px;
+  min-height: 600px;
+}
+
+.results-header {
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.results-header h2 {
+  margin: 0 0 8px 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: #333333;
+}
+
+.results-count {
+  margin: 0;
+  font-size: 14px;
+  color: #666666;
+  font-weight: 500;
+}
+
+.results-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
+  border: 2px dashed #9c27b0;
+  border-radius: 8px;
+}
+
+.results-placeholder-content {
+  text-align: center;
+  padding: 48px;
+  max-width: 500px;
+}
+
+.results-icon {
+  font-size: 64px;
+  display: block;
+  margin-bottom: 24px;
+  animation: bounce 2s ease-in-out infinite;
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.results-placeholder-content h3 {
+  margin: 0 0 16px 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: #7b1fa2;
+}
+
+.results-placeholder-content p {
+  margin: 8px 0;
+  font-size: 16px;
+  color: #424242;
+  line-height: 1.5;
+}
+
+.results-note {
+  margin-top: 24px !important;
+  padding: 12px 16px;
+  background-color: rgba(255, 255, 255, 0.8);
+  border-left: 4px solid #ff9800;
+  border-radius: 4px;
+  font-size: 14px !important;
+  font-style: italic;
+  color: #f57c00 !important;
+}
+
+/* ============================================================================
+   Responsive Design
+   ============================================================================ */
+
+/* Tablet (768px - 1024px) */
+@media (max-width: 1024px) {
+  .search-container {
+    grid-template-columns: 320px 1fr;
+    gap: 20px;
+  }
+
+  .map-section {
+    height: 400px;
+  }
+}
+
+/* Mobile (up to 768px) */
+@media (max-width: 768px) {
+  .search-page {
+    padding: 16px;
+  }
+
+  .search-container {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .filters-sidebar {
+    position: relative;
+    top: 0;
+    max-height: none;
+    overflow-y: visible;
+  }
+
+  .map-section {
+    height: 300px;
+  }
+
+  .map-placeholder-content,
+  .results-placeholder-content {
+    padding: 32px 24px;
+  }
+
+  .map-placeholder-content h2,
+  .results-placeholder-content h3 {
+    font-size: 20px;
+  }
+
+  .map-placeholder-content p,
+  .results-placeholder-content p {
+    font-size: 14px;
+  }
+
+  .map-icon,
+  .results-icon {
+    font-size: 48px;
+  }
+
+  .results-section {
+    padding: 16px;
+    min-height: 400px;
+  }
+
+  .results-header h2 {
+    font-size: 20px;
+  }
+}
+
+/* Small Mobile (up to 480px) */
+@media (max-width: 480px) {
+  .search-page {
+    padding: 12px;
+  }
+
+  .map-section {
+    height: 250px;
+  }
+
+  .map-placeholder-content,
+  .results-placeholder-content {
+    padding: 24px 16px;
+  }
+
+  .results-placeholder {
+    min-height: 300px;
+  }
+}
+
+/* ============================================================================
+   Loading States
+   ============================================================================ */
+
+.loading-spinner {
+  display: inline-block;
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ============================================================================
+   Accessibility
+   ============================================================================ */
+
+/* Focus styles for keyboard navigation */
+*:focus-visible {
+  outline: 3px solid #667eea;
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .map-placeholder,
+  .results-placeholder {
+    border-width: 3px;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -34,8 +34,8 @@ export default defineConfig({
         globals: {
           react: 'React',
           'react-dom': 'ReactDOM',
-          'styled-components': 'styled',
-          'framer-motion': 'framerMotion',
+          'styled-components': 'window.styled',
+          'framer-motion': 'Motion',
         },
         assetFileNames: 'assets/[name].[ext]',
       },
@@ -44,14 +44,12 @@ export default defineConfig({
     chunkSizeWarningLimit: 500,
     // Source maps for debugging
     sourcemap: true,
-    // Minification
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true,
-        drop_debugger: true,
-      },
-    },
+    // Minification - disabled for debugging
+    minify: false,
+  },
+
+  define: {
+    'process.env.NODE_ENV': JSON.stringify('production'),
   },
 
   // Development server configuration

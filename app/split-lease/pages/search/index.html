@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Search for split lease properties in NYC and New Jersey. Filter by schedule, location, price, and more.">
+  <title>Search Properties | Split Lease</title>
+
+  <!-- Page-specific CSS -->
+  <link rel="stylesheet" href="/pages/search/css/search.css">
+
+  <!-- Component Library Styles -->
+  <link rel="stylesheet" href="/components/dist/assets/style.css">
+</head>
+<body>
+  <!-- Header Island Mount Point -->
+  <div id="header-mount"></div>
+
+  <!-- Main Content -->
+  <main class="search-page">
+    <!-- Search Page Title (for SEO) -->
+    <h1 class="sr-only">Search Split Lease Properties</h1>
+
+    <!-- Search Layout Grid -->
+    <div class="search-container">
+      <!-- Left Sidebar: Filter Section -->
+      <aside class="filters-sidebar">
+        <!-- SearchFilters Island Mount Point -->
+        <div id="search-filters"></div>
+      </aside>
+
+      <!-- Main Content Area -->
+      <div class="main-content">
+        <!-- Skeletal Map Section -->
+        <section class="map-section" id="search-map">
+          <div class="map-placeholder">
+            <div class="map-placeholder-content">
+              <span class="map-icon">🗺️</span>
+              <h2>Interactive Map Coming Soon</h2>
+              <p>Google Maps integration with listing markers will be added here.</p>
+              <p class="map-note">TODO: Integrate Google Maps API with Supabase data</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Skeletal Results Section -->
+        <section class="results-section" id="search-results">
+          <div class="results-header">
+            <h2>Search Results</h2>
+            <p class="results-count">0 properties found</p>
+          </div>
+
+          <div class="results-placeholder">
+            <div class="results-placeholder-content">
+              <span class="results-icon">🏠</span>
+              <h3>Results Grid Coming Soon</h3>
+              <p>Property listing cards will be displayed here based on your filter selections.</p>
+              <p class="results-note">TODO: Integrate Supabase queries and display ListingCard components</p>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer Island Mount Point -->
+  <div id="footer-mount"></div>
+
+  <!-- React Dependencies -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
+  <!-- Styled Components & Framer Motion -->
+  <script crossorigin src="https://unpkg.com/styled-components@6.1.13/dist/styled-components.min.js"></script>
+  <script crossorigin src="https://unpkg.com/framer-motion@11/dist/framer-motion.js"></script>
+
+  <!-- Component Library Bundle -->
+  <script src="/components/dist/split-lease-components.umd.js"></script>
+
+  <!-- Island Mounting Script -->
+  <script>
+    (function() {
+      // Wait for DOM and components to be ready
+      function mountIslands() {
+        if (!window.SplitLeaseComponents) {
+          console.error('SplitLeaseComponents library not loaded');
+          return;
+        }
+
+        const React = window.React;
+        const ReactDOM = window.ReactDOM;
+        const Components = window.SplitLeaseComponents;
+
+        console.log('Mounting React islands...');
+        console.log('Available components:', Object.keys(Components));
+
+        // Mount Header
+        try {
+          const headerMount = document.getElementById('header-mount');
+          if (headerMount && Components.Header) {
+            const headerRoot = ReactDOM.createRoot(headerMount);
+            headerRoot.render(React.createElement(Components.Header));
+            console.log('✓ Header mounted');
+          }
+        } catch (error) {
+          console.error('Error mounting Header:', error);
+        }
+
+        // Mount SearchFilters
+        try {
+          const filtersMount = document.getElementById('search-filters');
+          if (filtersMount && Components.SearchFilters) {
+            const filtersRoot = ReactDOM.createRoot(filtersMount);
+
+            // Create SearchFilters with callback
+            const searchFiltersElement = React.createElement(Components.SearchFilters, {
+              onFilterChange: (filters) => {
+                console.log('🔍 Filters changed:', filters);
+                // TODO: Implement Supabase query based on filter values
+                // TODO: Update map markers based on filter results
+                // TODO: Update results grid with filtered listings
+              },
+              initialFilters: {
+                sortBy: 'our-recommendations',
+              },
+            });
+
+            filtersRoot.render(searchFiltersElement);
+            console.log('✓ SearchFilters mounted');
+          }
+        } catch (error) {
+          console.error('Error mounting SearchFilters:', error);
+        }
+
+        // Mount Footer
+        try {
+          const footerMount = document.getElementById('footer-mount');
+          if (footerMount && Components.Footer) {
+            const footerRoot = ReactDOM.createRoot(footerMount);
+            footerRoot.render(React.createElement(Components.Footer));
+            console.log('✓ Footer mounted');
+          }
+        } catch (error) {
+          console.error('Error mounting Footer:', error);
+        }
+
+        console.log('All islands mounted successfully');
+      }
+
+      // Mount when DOM is ready
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', mountIslands);
+      } else {
+        mountIslands();
+      }
+    })();
+  </script>
+</body>
+</html>

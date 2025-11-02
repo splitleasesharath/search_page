@@ -1,0 +1,85 @@
+import styled from 'styled-components';
+
+export const Container = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+`;
+
+export const Label = styled.label<{ $required?: boolean }>`
+  font-size: 14px;
+  font-weight: 600;
+  color: #333333;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  ${props => props.$required && `
+    &::after {
+      content: '*';
+      color: #d32f2f;
+    }
+  `}
+`;
+
+export const SelectWrapper = styled.div`
+  position: relative;
+  width: 100%;
+`;
+
+export const StyledSelect = styled.select<{ $error?: boolean }>`
+  width: 100%;
+  padding: 12px 40px 12px 16px;
+  font-size: 14px;
+  font-family: inherit;
+  color: #333333;
+  background-color: #ffffff;
+  border: 2px solid ${props => props.$error ? '#d32f2f' : '#e0e0e0'};
+  border-radius: 8px;
+  cursor: pointer;
+  appearance: none;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: ${props => props.$error ? '#d32f2f' : '#667eea'};
+  }
+
+  &:focus {
+    outline: none;
+    border-color: ${props => props.$error ? '#d32f2f' : '#667eea'};
+    box-shadow: 0 0 0 3px ${props => props.$error ? 'rgba(211, 47, 47, 0.1)' : 'rgba(102, 126, 234, 0.1)'};
+  }
+
+  &:disabled {
+    background-color: #f5f5f5;
+    color: #9e9e9e;
+    cursor: not-allowed;
+    border-color: #e0e0e0;
+  }
+
+  &::placeholder {
+    color: #9e9e9e;
+  }
+
+  /* Hide default arrow in IE */
+  &::-ms-expand {
+    display: none;
+  }
+`;
+
+export const DropdownIcon = styled.div`
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: #666666;
+  font-size: 12px;
+`;
+
+export const ErrorMessage = styled.span`
+  font-size: 12px;
+  color: #d32f2f;
+  margin-top: 4px;
+`;

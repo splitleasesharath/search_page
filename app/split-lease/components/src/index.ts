@@ -10,9 +10,20 @@
 // ============================================================================
 // Existing Components
 // ============================================================================
-// export { default as SearchScheduleSelector } from './SearchScheduleSelector'; // TODO: Create this component
 export { Footer } from './Footer';
 export { Header } from './Header';
+
+// ============================================================================
+// Search Schedule Selector
+// ============================================================================
+export { SearchScheduleSelector } from './SearchScheduleSelector';
+export type {
+  Day,
+  Listing,
+  SearchScheduleSelectorProps,
+  ValidationResult,
+  ListingCount,
+} from './SearchScheduleSelector';
 
 // export { ListingImageGrid } from './ListingImageGrid'; // TODO: Create this component
 // export type { ListingImage, ListingImageGridProps } from './ListingImageGrid';
@@ -30,11 +41,11 @@ export { Header } from './Header';
 // ============================================================================
 // Atomic Components
 // ============================================================================
-// TODO: Export atomic components as they are created
-// export { Button } from './atomic/Button';
-// export { Input } from './atomic/Input';
-// export { Icon } from './atomic/Icon';
-// export { Text } from './atomic/Text';
+export { Dropdown } from './atoms/Dropdown';
+export type { DropdownOption, DropdownProps } from './atoms/Dropdown';
+
+export { TextInput } from './atoms/TextInput';
+export type { TextInputProps } from './atoms/TextInput';
 
 // ============================================================================
 // Molecular Components
@@ -59,6 +70,15 @@ export type { PopularListingsProps } from './organisms/PopularListings';
 
 export { SupportSection } from './organisms/SupportSection';
 export type { SupportSectionProps, SupportOption } from './organisms/SupportSection';
+
+export { SearchFilters } from './organisms/SearchFilters';
+export type { SearchFiltersProps, SearchFilterValues } from './organisms/SearchFilters';
+export {
+  BOROUGH_OPTIONS,
+  WEEKLY_PATTERN_OPTIONS,
+  PRICE_TIER_OPTIONS,
+  SORT_BY_OPTIONS,
+} from './organisms/SearchFilters';
 
 // ============================================================================
 // Template Components
