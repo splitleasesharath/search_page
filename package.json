@@ -1,0 +1,15 @@
+{
+  "name": "split-lease-search",
+  "version": "1.0.0",
+  "description": "Split Lease property search page",
+  "scripts": {
+    "start": "python server.py",
+    "build": "node build-cloudflare.js",
+    "serve": "python -m http.server 8000"
+  },
+  "dependencies": {
+    "playwright": "^1.55.1"
+  },
+  "author": "Split Lease",
+  "license": "MIT"
+}
