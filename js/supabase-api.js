@@ -17,13 +17,18 @@ class SupabaseAPI {
     async initialize() {
         try {
             // Check if Supabase JS client library is loaded
-            if (typeof supabase === 'undefined') {
+            // The @supabase/supabase-js@2 CDN exposes window.supabase
+            const supabaseLib = window.supabase || (typeof supabase !== 'undefined' ? supabase : null);
+
+            if (!supabaseLib || !supabaseLib.createClient) {
                 console.error('❌ Supabase client library not loaded. Include it in your HTML.');
+                console.error('   Expected: window.supabase.createClient to be available');
+                console.error('   Found: window.supabase =', typeof window.supabase);
                 return false;
             }
 
             // Create Supabase client
-            this.client = supabase.createClient(this.supabaseUrl, this.supabaseKey);
+            this.client = supabaseLib.createClient(this.supabaseUrl, this.supabaseKey);
             this.isInitialized = true;
             console.log('✅ Supabase API initialized successfully');
             return true;

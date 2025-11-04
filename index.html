@@ -14,9 +14,14 @@
     <!-- Tailwind CSS for Informational Text Component -->
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- React & ReactDOM for Informational Text Component -->
+
+    <!-- React & ReactDOM for Informational Text Component & Schedule Selector -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
+
+    <!-- Styled Components for Schedule Selector styling -->
+    <script src="https://unpkg.com/styled-components@6.1.1/dist/styled-components.min.js"></script>
 
     <!-- Lottie for AI Signup animations -->
     <script src="https://unpkg.com/lottie-web@5.12.2/build/player/lottie.min.js"></script>
@@ -67,29 +72,10 @@
     <!-- Filter Panel -->
     <div class="filter-panel" id="filterPanel">
         <div class="filter-container">
-            <!-- Top Row: Schedule Selector Only -->
+            <!-- Top Row: Schedule Selector (React Island) -->
             <div class="top-filter-row">
-                <!-- Day Selector Section -->
-                <div class="filter-group calendar-group">
-                    <label>Select Your Days</label>
-                    <div class="day-selector">
-                        <div class="calendar-icon">
-                            <img src="https://c.animaapp.com/meh6k861XoGXNn/img/calendar-minimalistic-svgrepo-com-202-svg.svg" alt="Calendar" width="35" height="35">
-                        </div>
-                        <div class="day-badge" data-day="0" onclick="toggleDay(0)">S</div>
-                        <div class="day-badge active" data-day="1" onclick="toggleDay(1)">M</div>
-                        <div class="day-badge active" data-day="2" onclick="toggleDay(2)">T</div>
-                        <div class="day-badge active" data-day="3" onclick="toggleDay(3)">W</div>
-                        <div class="day-badge active" data-day="4" onclick="toggleDay(4)">T</div>
-                        <div class="day-badge active" data-day="5" onclick="toggleDay(5)">F</div>
-                        <div class="day-badge" data-day="6" onclick="toggleDay(6)">S</div>
-                    </div>
-                    <div class="checkin-checkout" id="checkinCheckout">
-                        <span><strong>Check-in:</strong> <span id="checkinDay">Monday</span></span>
-                        <span class="separator">•</span>
-                        <span><strong>Check-out:</strong> <span id="checkoutDay">Friday</span></span>
-                    </div>
-                </div>
+                <!-- React Schedule Selector Mount Point -->
+                <div id="schedule-selector-root"></div>
             </div>
 
             <!-- Horizontal Filter Row -->
@@ -284,10 +270,81 @@
     <script src="js/logger.js"></script>
     <!-- Supabase JavaScript Client Library -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // Verify Supabase loaded correctly
+        if (window.supabase && window.supabase.createClient) {
+            console.log('✅ Supabase client library loaded successfully');
+            console.log('   window.supabase.createClient:', typeof window.supabase.createClient);
+        } else {
+            console.error('❌ Supabase client library failed to load');
+            console.error('   window.supabase:', window.supabase);
+        }
+    </script>
     <!-- Supabase API Integration (Primary Data Source) -->
     <script src="js/supabase-api.js"></script>
     <!-- Main Application -->
     <script src="js/app.js"></script>
+
+    <!-- Ensure Initialization Runs -->
+    <script>
+        // Backup initialization to ensure Supabase and listings load
+        // This runs after all scripts are loaded
+        (async function ensureInitialization() {
+            console.log('🔧 Backup initialization check running...');
+
+            // Wait for DOM to be ready
+            if (document.readyState === 'loading') {
+                await new Promise(resolve => document.addEventListener('DOMContentLoaded', resolve));
+            }
+
+            // Give the main init() function a chance to run first
+            await new Promise(resolve => setTimeout(resolve, 100));
+
+            // Check if SupabaseAPI was already initialized by app.js
+            if (window.SupabaseAPI && window.SupabaseAPI.isInitialized) {
+                console.log('✅ SupabaseAPI already initialized by main app');
+                return;
+            }
+
+            // If not initialized, do it now as backup
+            if (window.SupabaseAPI && !window.SupabaseAPI.isInitialized) {
+                console.log('⚠️ Main init() did not initialize SupabaseAPI, running backup initialization...');
+
+                try {
+                    const connected = await window.SupabaseAPI.init();
+                    if (connected) {
+                        console.log('✅ Backup: Supabase connected, fetching listings...');
+                        const listings = await window.SupabaseAPI.fetchListings();
+
+                        if (listings && listings.length > 0) {
+                            console.log(`✅ Backup: Fetched ${listings.length} listings, rendering...`);
+                            window.currentListings = listings;
+
+                            // Call render function if it exists
+                            if (typeof renderListings === 'function') {
+                                renderListings(listings);
+                            } else if (typeof initializeLazyLoading === 'function') {
+                                initializeLazyLoading(listings);
+                            }
+
+                            // Update listing count
+                            if (typeof updateListingCount === 'function') {
+                                updateListingCount(listings.length);
+                            }
+
+                            // Hide loading skeleton
+                            const skeleton = document.getElementById('loadingSkeleton');
+                            if (skeleton) skeleton.classList.remove('active');
+
+                            console.log('✅ Backup initialization complete!');
+                        }
+                    }
+                } catch (error) {
+                    console.error('❌ Backup initialization failed:', error);
+                }
+            }
+        })();
+    </script>
     <!-- Informational Text Component -->
     <script src="js/informational-text-react.js"></script>
     <script src="js/informational-text.js"></script>
@@ -439,5 +496,9 @@
 
     <!-- Contact Host Messaging Component -->
     <script src="components/ContactHost/contact-host-messaging.js"></script>
+
+    <!-- Schedule Selector Component (React Island) -->
+    <script type="module" src="dist/schedule-selector.js"></script>
+    <script src="js/schedule-selector-integration.js"></script>
 </body>
 </html>

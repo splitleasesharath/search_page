@@ -1071,6 +1071,11 @@ function updateDayBadges() {
 function updateCheckinCheckout() {
     const checkinCheckoutEl = document.getElementById('checkinCheckout');
 
+    // Skip if element doesn't exist (React Schedule Selector handles its own display)
+    if (!checkinCheckoutEl) {
+        return;
+    }
+
     if (selectedDays.length === 0) {
         checkinCheckoutEl.style.display = 'none';
         return;
