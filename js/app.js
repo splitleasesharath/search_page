@@ -61,6 +61,14 @@ function updateAllDisplayedPrices() {
     });
 }
 
+// Make functions globally available IMMEDIATELY for backup initialization
+// These MUST be exposed before DOMContentLoaded to be available to backup init
+window.populateBoroughs = populateBoroughs;
+window.populateNeighborhoods = populateNeighborhoods;
+window.setupEventListeners = setupEventListeners;
+window.updateListingCount = updateListingCount;
+window.renderListings = renderListings;
+
 // Main application JavaScript
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize the application
@@ -97,8 +105,13 @@ async function init() {
                         setTimeout(() => window.updateMapMarkers(supabaseData), 1000);
                     }
 
-                    // Populate neighborhoods from Supabase
-                    await populateNeighborhoods();
+                    // Populate boroughs and neighborhoods from Supabase
+                    await populateBoroughs();
+                    // Get the currently selected borough and populate its neighborhoods
+                    const boroughSelect = document.getElementById('boroughSelect');
+                    const selectedBorough = boroughSelect?.value;
+                    const boroughId = window.FilterConfig ? window.FilterConfig.getBoroughId(selectedBorough) : null;
+                    await populateNeighborhoods(boroughId);
 
                     // Hide loading skeleton
                     if (skeleton) skeleton.classList.remove('active');
@@ -495,10 +508,16 @@ function setupFilterListeners() {
         }
     });
 
-    // Borough select - update location text
+    // Borough select - update location text and refresh neighborhoods
     const boroughSelect = document.getElementById('boroughSelect');
     if (boroughSelect) {
-        boroughSelect.addEventListener('change', updateLocationText);
+        boroughSelect.addEventListener('change', async function() {
+            updateLocationText();
+            // Refresh neighborhoods based on selected borough
+            const selectedBorough = boroughSelect.value;
+            const boroughId = window.FilterConfig ? window.FilterConfig.getBoroughId(selectedBorough) : null;
+            await populateNeighborhoods(boroughId);
+        });
         // Initialize on load
         updateLocationText();
     }
@@ -531,25 +550,125 @@ function updateLocationText() {
     locationText.textContent = boroughMap[selectedBorough] || 'Manhattan';
 }
 
-// Apply filters to listings - DISABLED - Always shows all listings
+// Apply filters to listings - ENABLED with fallback logic
 async function applyFilters() {
-    console.log('⚠️ Filters disabled - showing all listings');
+    console.log('🔍 Applying filters to listings...');
 
-    // Ignore all filter selections and always show all listings
-    // No filtering by borough, price range, or sorting
+    if (!window.SupabaseAPI || !window.SupabaseAPI.isInitialized) {
+        console.warn('⚠️ Supabase API not initialized');
+        return;
+    }
 
-    // Just use the current listings that were already loaded
-    if (window.currentListings && window.currentListings.length > 0) {
-        console.log(`📋 Displaying all ${window.currentListings.length} listings (filters disabled)`);
-        initializeLazyLoading(window.currentListings);
-        updateListingCount(window.currentListings.length);
+    if (!window.FilterConfig) {
+        console.error('❌ FilterConfig not loaded - include filter-config.js');
+        return;
+    }
+
+    try {
+        // Collect filter values from UI
+        const checkedNeighborhoods = Array.from(
+            document.querySelectorAll('.neighborhood-list input[type="checkbox"]:checked')
+        ).map(checkbox => checkbox.value);
+
+        const filterInputs = {
+            borough: document.getElementById('boroughSelect')?.value,
+            weekPattern: document.getElementById('weekPattern')?.value,
+            priceTier: document.getElementById('priceTier')?.value,
+            sortBy: document.getElementById('sortBy')?.value,
+            neighborhoods: checkedNeighborhoods
+        };
+
+        console.log('📋 Filter inputs:', filterInputs);
+
+        // Build filter configuration using FilterConfig
+        const filterConfig = window.FilterConfig.buildFilterConfig(filterInputs);
+        console.log('⚙️ Filter config:', filterConfig);
+
+        // Fetch filtered listings from Supabase
+        let filteredListings = await window.SupabaseAPI.getListings(filterConfig);
+        let didFallback = false;
+
+        // Fallback: If no results and filters are applied, show all listings
+        if (filteredListings.length === 0 && Object.keys(filterConfig).some(key =>
+            key !== 'sort' && filterConfig[key] && (Array.isArray(filterConfig[key]) ? filterConfig[key].length > 0 : true)
+        )) {
+            console.log('⚠️ No listings match filters, showing all available listings as fallback');
+
+            // Fetch all listings without filters
+            filteredListings = await window.SupabaseAPI.getListings({
+                sort: filterConfig.sort // Keep the sort preference
+            });
+            didFallback = true;
+        }
+
+        // Update the display
+        window.currentListings = filteredListings;
+        console.log(`✅ Displaying ${filteredListings.length} listings`);
+
+        initializeLazyLoading(filteredListings);
+        
+        // Show or clear filter reset notice based on fallback
+        if (didFallback) {
+            showFilterResetNotice('No results for your selections. Filters were reset to show all listings.');
+        } else {
+            clearFilterResetNotice();
+        }
+        updateListingCount(filteredListings.length);
 
         // Update map markers if map is initialized
         if (window.mapInstance && window.updateMapMarkers) {
-            window.updateMapMarkers(window.currentListings);
+            window.updateMapMarkers(filteredListings);
         }
-    } else {
-        console.log('⚠️ No listings loaded yet');
+
+        // Re-populate neighborhoods based on currently selected borough
+        const boroughSelect = document.getElementById('boroughSelect');
+        const selectedBorough = boroughSelect?.value;
+        const boroughId = window.FilterConfig ? window.FilterConfig.getBoroughId(selectedBorough) : null;
+        await populateNeighborhoods(boroughId);
+
+    } catch (error) {
+        console.error('❌ Error applying filters:', error);
+        // On error, show all listings
+        if (window.currentListings && window.currentListings.length > 0) {
+            initializeLazyLoading(window.currentListings);
+            updateListingCount(window.currentListings.length);
+        }
+    }
+}
+
+// Display a notice above the listings when filters are reset due to zero results
+function showFilterResetNotice(message) {
+    const section = document.querySelector('.listings-section');
+    const container = document.getElementById('listingsContainer');
+    if (!section || !container) return;
+
+    let notice = document.getElementById('filterResetNotice');
+    if (!notice) {
+        notice = document.createElement('div');
+        notice.id = 'filterResetNotice';
+        notice.className = 'filter-reset-notice';
+        notice.style.cssText = `
+            margin: 12px 0 8px 0;
+            padding: 12px 14px;
+            border-radius: 10px;
+            background: #FFF7ED;
+            color: #9A3412;
+            border: 1px solid #FED7AA;
+            font-family: Inter, sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+        `;
+        // Insert above the listings container
+        section.insertBefore(notice, container);
+    }
+    notice.textContent = message || 'No results for your selections. Filters were reset to show all listings.';
+}
+
+// Remove the filter reset notice if present
+function clearFilterResetNotice() {
+    const notice = document.getElementById('filterResetNotice');
+    if (notice && notice.parentNode) {
+        notice.parentNode.removeChild(notice);
     }
 }
 
@@ -567,36 +686,76 @@ function filterNeighborhoods(searchTerm) {
     });
 }
 
-// Populate neighborhoods dynamically from Supabase
-async function populateNeighborhoods() {
+// Populate boroughs dynamically from Supabase database table
+async function populateBoroughs() {
     if (!window.SupabaseAPI) return;
 
     try {
-        // Get unique neighborhoods from loaded listings
-        const listings = window.currentListings || [];
-        const neighborhoodsSet = new Set();
+        // Fetch boroughs from zat_geo_borough_toplevel table
+        const boroughs = await window.SupabaseAPI.getBoroughs();
+        const boroughSelect = document.getElementById('boroughSelect');
 
-        listings.forEach(listing => {
-            const neighborhood = listing.Neighborhood || listing.neighborhood || listing['Location - Hood'];
-            if (neighborhood && neighborhood.trim()) {
-                neighborhoodsSet.add(neighborhood.trim());
+        if (boroughSelect && boroughs && boroughs.length > 0) {
+            console.log(`🏙️ Populating ${boroughs.length} boroughs from database table`);
+
+            // Store current selection
+            const currentValue = boroughSelect.value;
+
+            // Clear existing options
+            boroughSelect.innerHTML = '';
+
+            // Add boroughs from database
+            boroughs.forEach(borough => {
+                const option = document.createElement('option');
+                option.value = borough.value;
+                option.textContent = borough.name;
+                // Restore selection if it matches
+                if (borough.value === currentValue || borough.id === currentValue) {
+                    option.selected = true;
+                }
+                boroughSelect.appendChild(option);
+            });
+
+            // If no selection was restored, select the first option (or Manhattan if available)
+            if (!boroughSelect.value) {
+                const manhattanOption = Array.from(boroughSelect.options).find(opt =>
+                    opt.value === 'manhattan' || opt.textContent === 'Manhattan'
+                );
+                if (manhattanOption) {
+                    manhattanOption.selected = true;
+                } else if (boroughSelect.options.length > 0) {
+                    boroughSelect.options[0].selected = true;
+                }
             }
-        });
 
-        const neighborhoods = Array.from(neighborhoodsSet).sort();
+            console.log('✅ Boroughs populated from database');
+        }
+    } catch (error) {
+        console.warn('⚠️ Failed to load boroughs from database:', error.message);
+        // Keep hardcoded boroughs as fallback
+    }
+}
+
+// Populate neighborhoods dynamically from Supabase database table
+async function populateNeighborhoods(boroughId = null) {
+    if (!window.SupabaseAPI) return;
+
+    try {
+        // Fetch neighborhoods from zat_geo_hood_mediumlevel table
+        const neighborhoods = await window.SupabaseAPI.getNeighborhoods(boroughId);
         const neighborhoodList = document.querySelector('.neighborhood-list');
 
         if (neighborhoodList && neighborhoods && neighborhoods.length > 0) {
-            console.log(`📍 Populating ${neighborhoods.length} neighborhoods from Supabase`);
+            console.log(`📍 Populating ${neighborhoods.length} neighborhoods from database table`);
 
-            // Clear existing neighborhoods (keep hardcoded ones as fallback)
-            // Only replace if we have Supabase data
+            // Clear existing neighborhoods
             neighborhoodList.innerHTML = '';
 
-            // Add neighborhoods from Supabase
+            // Add neighborhoods from database - use database ID as value for accurate filtering
             neighborhoods.forEach(neighborhood => {
                 const label = document.createElement('label');
-                label.innerHTML = `<input type="checkbox" value="${neighborhood.toLowerCase().replace(/\s+/g, '-')}"> ${neighborhood}`;
+                // Use database _id as value instead of kebab-case name for accurate matching
+                label.innerHTML = `<input type="checkbox" value="${neighborhood.id}"> ${neighborhood.name}`;
                 neighborhoodList.appendChild(label);
             });
 
@@ -606,10 +765,10 @@ async function populateNeighborhoods() {
                 checkbox.addEventListener('change', applyFilters);
             });
 
-            console.log('✅ Neighborhoods populated and event listeners attached');
+            console.log('✅ Neighborhoods populated from database and event listeners attached');
         }
     } catch (error) {
-        console.warn('⚠️ Failed to load neighborhoods from Supabase:', error.message);
+        console.warn('⚠️ Failed to load neighborhoods from database:', error.message);
         // Keep hardcoded neighborhoods as fallback
     }
 }
@@ -1258,5 +1417,5 @@ function openContactHostModal(listingId) {
     }
 }
 
-// Make function globally available
+// Make additional functions globally available
 window.openContactHostModal = openContactHostModal;

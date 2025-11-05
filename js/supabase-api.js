@@ -50,13 +50,60 @@ class SupabaseAPI {
         }
 
         try {
-            console.log('🔍 Fetching all listings from Supabase...');
+            const hasFilters = filters && Object.keys(filters).length > 0;
+            console.log('🔍 Fetching listings from Supabase...', hasFilters ? 'with filters' : 'all listings');
+            if (hasFilters) {
+                console.log('📋 Active filters:', filters);
+            }
 
-            // Fetch ALL listings without any filters
-            const { data, error } = await this.client
+            // Build query with filters
+            let query = this.client
                 .from('listing')
                 .select('*')
-                .order('Modified Date', { ascending: false });
+                .eq('Active', true);
+                // Removed .eq('Approved', true) - no listings have Approved=true in database
+
+            // Apply borough filter
+            if (filters.boroughs && filters.boroughs.length > 0) {
+                console.log('  🏙️ Filtering by boroughs:', filters.boroughs.length);
+                query = query.in('Location - Borough', filters.boroughs);
+            }
+
+            // Apply week pattern filter
+            if (filters.weekPatterns && filters.weekPatterns.length > 0) {
+                console.log('  📅 Filtering by week patterns:', filters.weekPatterns);
+                query = query.in('Weeks offered', filters.weekPatterns);
+            }
+
+            // Apply price range filter
+            if (filters.priceRange) {
+                console.log('  💰 Filtering by price range:', filters.priceRange);
+                if (filters.priceRange.min !== undefined) {
+                    query = query.gte('Standarized Minimum Nightly Price (Filter)', filters.priceRange.min);
+                }
+                if (filters.priceRange.max !== undefined) {
+                    query = query.lte('Standarized Minimum Nightly Price (Filter)', filters.priceRange.max);
+                }
+            }
+
+            // Apply neighborhood filter
+            if (filters.neighborhoods && filters.neighborhoods.length > 0) {
+                console.log('  🏘️ Filtering by neighborhoods:', filters.neighborhoods.length);
+                query = query.in('Location - Hood', filters.neighborhoods);
+            }
+
+            // Apply sorting (wrap field names with special characters in quotes)
+            if (filters.sort && filters.sort.field) {
+                console.log('  🔢 Sorting by:', filters.sort.field, filters.sort.ascending ? 'ASC' : 'DESC');
+                // Supabase requires column names with special chars to be quoted
+                const sortField = filters.sort.field;
+                query = query.order(sortField, { ascending: filters.sort.ascending });
+            } else {
+                // Default sort by modified date
+                query = query.order('Modified Date', { ascending: false });
+            }
+
+            const { data, error } = await query;
 
             if (error) {
                 console.error('❌ Error fetching listings:', error);
@@ -286,7 +333,7 @@ class SupabaseAPI {
         const boroughMap = {
             '1607041299687x679479834266385900': 'manhattan',
             '1607041299637x913970439175620100': 'brooklyn',
-            '1607041299664x679850027677426300': 'queens',
+            '1607041299828x406969561802059650': 'queens',  // Corrected: validated via database query
             '1607041299714x866026028780297600': 'bronx',
             '1607041299747x827062990768184900': 'bergen',
             '1607041299777x826854337748672500': 'essex',
@@ -344,6 +391,102 @@ class SupabaseAPI {
         }
 
         return '• ' + parts.join(' • ');
+    }
+
+    /**
+     * Get all boroughs from zat_geo_borough_toplevel table
+     * @returns {Promise<Array>} Array of borough objects with id and name
+     */
+    async getBoroughs() {
+        if (!this.isInitialized) {
+            console.warn('⚠️ Supabase not initialized');
+            return [];
+        }
+
+        try {
+            console.log('🏙️ Fetching boroughs from database...');
+
+            const { data, error } = await this.client
+                .from('zat_geo_borough_toplevel')
+                .select('_id, "Display Borough"')
+                .order('Display Borough', { ascending: true });
+
+            if (error) {
+                console.error('❌ Error fetching boroughs:', error);
+                return [];
+            }
+
+            // Transform to app format
+            const boroughs = data
+                .filter(b => b['Display Borough'] && b['Display Borough'].trim())
+                .map(b => ({
+                    id: b._id,
+                    name: b['Display Borough'].trim(),
+                    // Generate value for select option (lowercase, replace spaces)
+                    value: b['Display Borough'].trim().toLowerCase()
+                        .replace(/\s+county\s+nj/i, '') // Remove "County NJ"
+                        .replace(/\s+/g, '-') // Replace spaces with hyphens
+                }));
+
+            console.log(`✅ Fetched ${boroughs.length} boroughs from database`);
+            return boroughs;
+        } catch (error) {
+            console.error('❌ Error in getBoroughs:', error);
+            return [];
+        }
+    }
+
+    /**
+     * Get all neighborhoods from zat_geo_hood_mediumlevel table
+     * @param {string} boroughId - Optional borough ID to filter neighborhoods
+     * @returns {Promise<Array>} Array of neighborhood objects with id, name, and borough
+     */
+    async getNeighborhoods(boroughId = null) {
+        if (!this.isInitialized) {
+            console.warn('⚠️ Supabase not initialized');
+            return [];
+        }
+
+        try {
+            console.log('🏘️ Fetching neighborhoods from database...', boroughId ? `for borough: ${boroughId}` : 'all');
+
+            let query = this.client
+                .from('zat_geo_hood_mediumlevel')
+                .select('_id, Display, "Geo-Borough"')
+                .order('Display', { ascending: true });
+
+            // Filter by borough if provided
+            if (boroughId) {
+                query = query.eq('Geo-Borough', boroughId);
+            }
+
+            const { data, error } = await query;
+
+            if (error) {
+                console.error('❌ Error fetching neighborhoods:', error);
+                return [];
+            }
+
+            // Transform to app format
+            const neighborhoods = data
+                .filter(n => n.Display && n.Display.trim()) // Filter out empty or null Display names
+                .map(n => ({
+                    id: n._id,
+                    name: n.Display.trim(),
+                    boroughId: n['Geo-Borough'],
+                    // Generate kebab-case value for checkbox value attribute
+                    value: n.Display.trim().toLowerCase()
+                        .replace(/[^\w\s-]/g, '') // Remove special chars
+                        .replace(/\s+/g, '-') // Replace spaces with hyphens
+                        .replace(/--+/g, '-') // Replace multiple hyphens with single
+                }));
+
+            console.log(`✅ Fetched ${neighborhoods.length} neighborhoods from database`);
+            return neighborhoods;
+        } catch (error) {
+            console.error('❌ Error in getNeighborhoods:', error);
+            return [];
+        }
     }
 
     /**

@@ -80,17 +80,11 @@
 
             <!-- Horizontal Filter Row -->
             <div class="horizontal-filters">
-                <!-- Borough Select -->
+                <!-- Borough Select - Populated dynamically from database -->
                 <div class="filter-group compact">
                     <label for="boroughSelect">Select Borough</label>
                     <select id="boroughSelect" class="filter-select">
-                        <option value="bergen">Bergen County NJ</option>
-                        <option value="bronx">Bronx</option>
-                        <option value="brooklyn">Brooklyn</option>
-                        <option value="essex">Essex County NJ</option>
-                        <option value="hudson">Hudson County NJ</option>
-                        <option value="manhattan" selected>Manhattan</option>
-                        <option value="queens">Queens</option>
+                        <option value="">Loading boroughs...</option>
                     </select>
                 </div>
 
@@ -128,40 +122,12 @@
                     </select>
                 </div>
 
-                <!-- Neighborhood Multi-Select (moved to end) -->
+                <!-- Neighborhood Multi-Select - Populated dynamically from database -->
                 <div class="filter-group compact neighborhoods-group">
                     <label for="neighborhoodSelect">Refine Neighborhood(s)</label>
                     <input type="text" id="neighborhoodSearch" placeholder="Search neighborhoods..." class="neighborhood-search">
                     <div class="neighborhood-list">
-                        <label><input type="checkbox" value="alphabet-city"> Alphabet City</label>
-                        <label><input type="checkbox" value="central-harlem"> Central Harlem</label>
-                        <label><input type="checkbox" value="chinatown"> Chinatown</label>
-                        <label><input type="checkbox" value="civic-center"> Civic Center</label>
-                        <label><input type="checkbox" value="clinton"> Clinton</label>
-                        <label><input type="checkbox" value="east-village"> East Village</label>
-                        <label><input type="checkbox" value="financial-district"> Financial District</label>
-                        <label><input type="checkbox" value="flatiron"> Flatiron</label>
-                        <label><input type="checkbox" value="gramercy"> Gramercy</label>
-                        <label><input type="checkbox" value="greenwich-village"> Greenwich Village</label>
-                        <label><input type="checkbox" value="harlem"> Harlem</label>
-                        <label><input type="checkbox" value="hells-kitchen"> Hell's Kitchen</label>
-                        <label><input type="checkbox" value="lenox-hill"> Lenox Hill</label>
-                        <label><input type="checkbox" value="little-italy"> Little Italy</label>
-                        <label><input type="checkbox" value="lower-east-side"> Lower East Side</label>
-                        <label><input type="checkbox" value="manhattan-valley"> Manhattan Valley</label>
-                        <label><input type="checkbox" value="meatpacking"> Meatpacking District</label>
-                        <label><input type="checkbox" value="midtown"> Midtown</label>
-                        <label><input type="checkbox" value="morningside"> Morningside Heights</label>
-                        <label><input type="checkbox" value="murray-hill"> Murray Hill</label>
-                        <label><input type="checkbox" value="noho"> NoHo</label>
-                        <label><input type="checkbox" value="soho"> SoHo</label>
-                        <label><input type="checkbox" value="sutton"> Sutton Place</label>
-                        <label><input type="checkbox" value="tribeca"> TriBeCa</label>
-                        <label><input type="checkbox" value="turtle-bay"> Turtle Bay</label>
-                        <label><input type="checkbox" value="ues"> Upper East Side (UES)</label>
-                        <label><input type="checkbox" value="uws"> Upper West Side (UWS)</label>
-                        <label><input type="checkbox" value="west-village"> West Village</label>
-                        <label><input type="checkbox" value="yorkville"> Yorkville</label>
+                        <div style="padding: 10px; color: #666;">Loading neighborhoods...</div>
                     </div>
                 </div>
             </div>
@@ -282,8 +248,10 @@
     </script>
     <!-- Supabase API Integration (Primary Data Source) -->
     <script src="js/supabase-api.js"></script>
+    <!-- Filter Configuration -->
+    <script src="js/filter-config.js?v=4"></script>
     <!-- Main Application -->
-    <script src="js/app.js"></script>
+    <script src="js/app.js?v=4"></script>
 
     <!-- Ensure Initialization Runs -->
     <script>
@@ -330,6 +298,23 @@
                             // Update listing count
                             if (typeof updateListingCount === 'function') {
                                 updateListingCount(listings.length);
+                            }
+
+                            // Populate boroughs and neighborhoods from database
+                            if (typeof window.populateBoroughs === 'function') {
+                                await window.populateBoroughs();
+                            }
+                            // Get the currently selected borough and populate its neighborhoods
+                            if (typeof window.populateNeighborhoods === 'function') {
+                                const boroughSelect = document.getElementById('boroughSelect');
+                                const selectedBorough = boroughSelect?.value;
+                                const boroughId = window.FilterConfig ? window.FilterConfig.getBoroughId(selectedBorough) : null;
+                                await window.populateNeighborhoods(boroughId);
+                            }
+
+                            // Setup event listeners
+                            if (typeof setupEventListeners === 'function') {
+                                setupEventListeners();
                             }
 
                             // Hide loading skeleton
