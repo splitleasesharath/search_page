@@ -326,21 +326,21 @@ class SupabaseAPI {
     }
 
     /**
-     * Normalize borough name to lowercase format
+     * Normalize borough name to lowercase format (dynamically loaded from database)
+     * ⚠️ NO HARDCODED VALUES - Uses FilterConfig cache from database
      */
     normalizeBoroughName(boroughId) {
-        // Map Supabase borough IDs to normalized names
-        const boroughMap = {
-            '1607041299687x679479834266385900': 'manhattan',
-            '1607041299637x913970439175620100': 'brooklyn',
-            '1607041299828x406969561802059650': 'queens',  // Corrected: validated via database query
-            '1607041299714x866026028780297600': 'bronx',
-            '1607041299747x827062990768184900': 'bergen',
-            '1607041299777x826854337748672500': 'essex',
-            '1607041299803x542854758464683600': 'hudson'
-        };
+        // Use dynamic lookup from FilterConfig (populated from database)
+        if (window.FilterConfig && window.FilterConfig.getBoroughValueFromId) {
+            const value = window.FilterConfig.getBoroughValueFromId(boroughId);
+            if (value) {
+                return value;
+            }
+        }
 
-        return boroughMap[boroughId] || 'manhattan';
+        // If FilterConfig not ready or ID not found, log error and return null
+        console.error(`❌ Cannot normalize borough ID "${boroughId}" - FilterConfig not initialized or ID not found`);
+        return null;
     }
 
     /**

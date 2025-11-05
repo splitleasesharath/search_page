@@ -100,9 +100,16 @@ async function init() {
                     const stats = window.SupabaseAPI.getStats();
                     console.log(`📊 Supabase stats:`, stats);
 
-                    // Update map markers if map is initialized
+                    // Initialize FilterConfig with database data (REQUIRED before using filters)
+                    if (window.FilterConfig) {
+                        await window.FilterConfig.initializeFilterConfig();
+                    } else {
+                        console.error('❌ FilterConfig not loaded - include filter-config.js before app.js');
+                    }
+
+                    // Update map markers to match displayed cards only (after lazy loading initializes)
                     if (window.mapInstance && window.updateMapMarkers) {
-                        setTimeout(() => window.updateMapMarkers(supabaseData), 1000);
+                        setTimeout(() => updateMapToMatchDisplayedCards(), 1000);
                     }
 
                     // Populate boroughs and neighborhoods from Supabase
@@ -213,6 +220,9 @@ async function loadMoreListings() {
         window.registerPriceInfoTriggers();
     }
 
+    // Update map to show only the currently displayed listings
+    updateMapToMatchDisplayedCards();
+
     isLoading = false;
 }
 
@@ -273,6 +283,31 @@ function setupLazyLoadObserver() {
 // Legacy function for compatibility - now uses lazy loading
 function renderListings(listings) {
     initializeLazyLoading(listings);
+}
+
+// Get currently displayed listings from the DOM
+function getDisplayedListings() {
+    const displayedCards = document.querySelectorAll('.listing-card');
+    const displayedIds = Array.from(displayedCards).map(card => card.dataset.id);
+
+    // Filter allListings to only include displayed ones, maintaining order
+    const displayedListings = displayedIds
+        .map(id => allListings.find(listing => listing.id === id))
+        .filter(listing => listing !== undefined);
+
+    console.log(`📊 Currently displaying ${displayedListings.length} listing cards out of ${allListings.length} total`);
+    return displayedListings;
+}
+
+// Update map markers to match only the currently displayed listing cards
+function updateMapToMatchDisplayedCards() {
+    if (!window.mapInstance || !window.updateMapMarkers) {
+        return;
+    }
+
+    const displayedListings = getDisplayedListings();
+    console.log(`🗺️ Updating map to show only ${displayedListings.length} displayed listings`);
+    window.updateMapMarkers(displayedListings);
 }
 
 // Create a listing card element
@@ -529,25 +564,22 @@ function setupFilterListeners() {
     });
 }
 
-// Update location text based on borough selection
+// Update location text based on borough selection (dynamically loaded from database)
 function updateLocationText() {
     const boroughSelect = document.getElementById('boroughSelect');
     const locationText = document.getElementById('location-text');
 
     if (!boroughSelect || !locationText) return;
 
-    const boroughMap = {
-        'bergen': 'Bergen County NJ',
-        'bronx': 'Bronx',
-        'brooklyn': 'Brooklyn',
-        'essex': 'Essex County NJ',
-        'hudson': 'Hudson County NJ',
-        'manhattan': 'Manhattan',
-        'queens': 'Queens'
-    };
-
     const selectedBorough = boroughSelect.value;
-    locationText.textContent = boroughMap[selectedBorough] || 'Manhattan';
+    const displayName = window.FilterConfig ? window.FilterConfig.getBoroughDisplayName(selectedBorough) : null;
+
+    if (displayName) {
+        locationText.textContent = displayName;
+    } else {
+        console.warn(`⚠️ No display name found for borough: ${selectedBorough}`);
+        locationText.textContent = selectedBorough; // Fallback to raw value
+    }
 }
 
 // Apply filters to listings - ENABLED with fallback logic
@@ -606,7 +638,7 @@ async function applyFilters() {
         console.log(`✅ Displaying ${filteredListings.length} listings`);
 
         initializeLazyLoading(filteredListings);
-        
+
         // Show or clear filter reset notice based on fallback
         if (didFallback) {
             showFilterResetNotice('No results for your selections. Filters were reset to show all listings.');
@@ -615,10 +647,9 @@ async function applyFilters() {
         }
         updateListingCount(filteredListings.length);
 
-        // Update map markers if map is initialized
-        if (window.mapInstance && window.updateMapMarkers) {
-            window.updateMapMarkers(filteredListings);
-        }
+        // Update map markers to match only currently displayed cards (not all filtered results)
+        // This ensures map shows only what's visible in the listing cards
+        updateMapToMatchDisplayedCards();
 
         // Re-populate neighborhoods based on currently selected borough
         const boroughSelect = document.getElementById('boroughSelect');
@@ -729,10 +760,11 @@ async function populateBoroughs() {
             }
 
             console.log('✅ Boroughs populated from database');
+        } else {
+            console.error('❌ No boroughs returned from database');
         }
     } catch (error) {
-        console.warn('⚠️ Failed to load boroughs from database:', error.message);
-        // Keep hardcoded boroughs as fallback
+        console.error('❌ Failed to load boroughs from database:', error.message);
     }
 }
 
@@ -766,10 +798,11 @@ async function populateNeighborhoods(boroughId = null) {
             });
 
             console.log('✅ Neighborhoods populated from database and event listeners attached');
+        } else {
+            console.error('❌ No neighborhoods returned from database');
         }
     } catch (error) {
-        console.warn('⚠️ Failed to load neighborhoods from database:', error.message);
-        // Keep hardcoded neighborhoods as fallback
+        console.error('❌ Failed to load neighborhoods from database:', error.message);
     }
 }
 

@@ -1,21 +1,22 @@
 /**
  * Filter Configuration for Split Lease Search
- * Maps frontend filter values to Supabase database IDs and values
+ * Dynamically loads all filter configurations from Supabase database
+ * ⚠️ NO HARDCODED VALUES - All data loaded from database at runtime
  */
 
 /**
- * Borough ID Mapping
- * Maps frontend select values to Supabase borough IDs
+ * Dynamic Borough Cache
+ * Populated from zat_geo_borough_toplevel table at initialization
+ * Structure: { value: id, displayName: name, ... }
  */
-const BOROUGH_IDS = {
-    'bergen': '1607041299747x827062990768184900',
-    'bronx': '1607041299714x866026028780297600',
-    'brooklyn': '1607041299637x913970439175620100',
-    'essex': '1607041299777x826854337748672500',
-    'hudson': '1607041299803x542854758464683600',
-    'manhattan': '1607041299687x679479834266385900',
-    'queens': '1607041299828x406969561802059650'  // Corrected: validated via database query
-};
+let BOROUGH_CACHE = null;
+
+/**
+ * Dynamic Neighborhood Cache
+ * Populated from zat_geo_hood_mediumlevel table as needed
+ * Structure: { id: { name, boroughId, value }, ... }
+ */
+let NEIGHBORHOOD_CACHE = null;
 
 /**
  * Week Pattern Mapping
@@ -40,41 +41,6 @@ const PRICE_TIERS = {
     'all': null // No price filter
 };
 
-/**
- * Neighborhood ID Mapping
- * Maps frontend checkbox values (kebab-case) to Supabase neighborhood IDs
- */
-const NEIGHBORHOOD_ID_MAP = {
-    'alphabet-city': '1686665230140x391210370437286460',
-    'central-harlem': '1686665230141x230398124637156930',
-    'chinatown': '1686665230141x776267324259844400',
-    'civic-center': '1686665230141x755924307821723600',
-    'clinton': '1686665230141x109760773900222880',
-    'east-village': '1686665230142x112378752684300980',
-    'financial-district': '1686665230151x890139725988428000',
-    'flatiron': '1686665230152x267314860159501250',
-    'gramercy': '1686665230152x620128845984789800',
-    'greenwich-village': '1686665230152x612341317545480300',
-    'harlem': '1686665230152x605333115253335400',
-    'hells-kitchen': '1686665230152x946040790740281700',
-    'lenox-hill': '1686665230152x107491527623286400',
-    'little-italy': '1686665230155x602601280086412900',
-    'lower-east-side': '1686665230155x453679119750186400',
-    'manhattan-valley': '1686665230155x464862775699738100',
-    'meatpacking': '1686665230156x383426092121550660',
-    'midtown': '1686665230156x919393222700867700',
-    'morningside': '1686665230156x619700681333798900',
-    'murray-hill': '1686665230156x189072522158048260',
-    'noho': '1686665230156x796622800256194800',
-    'soho': '1686665230165x715885378733032800',
-    'sutton': '1686665230165x766503309591935400',
-    'tribeca': '1686665230165x338198443257803600',
-    'turtle-bay': '1686665230166x938784065484759300',
-    'ues': '1686665230166x869557584945557300',
-    'uws': '1686665230166x210607508191402500',
-    'west-village': '1686665230366x524476031487277800',
-    'yorkville': '1686665230367x729164037248075600'
-};
 
 /**
  * Sort Options Configuration
@@ -104,16 +70,102 @@ const SORT_OPTIONS = {
 };
 
 /**
- * Filter Helper Functions
+ * Filter Helper Functions - All Dynamic, No Hardcoded Values
  */
 
 /**
- * Get borough ID from frontend value
- * @param {string} boroughValue - Frontend borough select value
- * @returns {string|null} Supabase borough ID
+ * Initialize filter configuration by loading borough and neighborhood data from database
+ * MUST be called before using any filter functions
+ * @returns {Promise<boolean>} Success status
+ */
+async function initializeFilterConfig() {
+    if (!window.SupabaseAPI || !window.SupabaseAPI.isInitialized) {
+        console.error('❌ Cannot initialize FilterConfig: Supabase API not ready');
+        return false;
+    }
+
+    try {
+        // Load boroughs from database
+        const boroughs = await window.SupabaseAPI.getBoroughs();
+
+        // Build borough cache: value -> {id, displayName, value}
+        BOROUGH_CACHE = {};
+        boroughs.forEach(borough => {
+            BOROUGH_CACHE[borough.value] = {
+                id: borough.id,
+                displayName: borough.name,
+                value: borough.value
+            };
+        });
+
+        console.log(`✅ FilterConfig initialized with ${boroughs.length} boroughs from database`);
+        return true;
+    } catch (error) {
+        console.error('❌ Failed to initialize FilterConfig:', error);
+        return false;
+    }
+}
+
+/**
+ * Get borough ID from frontend value (dynamically loaded from database)
+ * @param {string} boroughValue - Frontend borough select value (e.g., "manhattan")
+ * @returns {string|null} Supabase borough ID or null if not found
  */
 function getBoroughId(boroughValue) {
-    return BOROUGH_IDS[boroughValue] || null;
+    if (!BOROUGH_CACHE) {
+        console.error('❌ FilterConfig not initialized - call initializeFilterConfig() first');
+        return null;
+    }
+
+    const borough = BOROUGH_CACHE[boroughValue];
+    if (!borough) {
+        console.warn(`⚠️ Borough value "${boroughValue}" not found in database cache`);
+        return null;
+    }
+
+    return borough.id;
+}
+
+/**
+ * Get borough display name from frontend value (dynamically loaded from database)
+ * @param {string} boroughValue - Frontend borough select value (e.g., "manhattan")
+ * @returns {string|null} Display name (e.g., "Manhattan") or null if not found
+ */
+function getBoroughDisplayName(boroughValue) {
+    if (!BOROUGH_CACHE) {
+        console.error('❌ FilterConfig not initialized - call initializeFilterConfig() first');
+        return null;
+    }
+
+    const borough = BOROUGH_CACHE[boroughValue];
+    if (!borough) {
+        console.warn(`⚠️ Borough value "${boroughValue}" not found in database cache`);
+        return null;
+    }
+
+    return borough.displayName;
+}
+
+/**
+ * Get borough value from database ID (reverse lookup)
+ * @param {string} boroughId - Supabase borough _id
+ * @returns {string|null} Frontend borough value (e.g., "manhattan") or null if not found
+ */
+function getBoroughValueFromId(boroughId) {
+    if (!BOROUGH_CACHE) {
+        console.error('❌ FilterConfig not initialized - call initializeFilterConfig() first');
+        return null;
+    }
+
+    // Search cache for matching ID
+    for (const [value, data] of Object.entries(BOROUGH_CACHE)) {
+        if (data.id === boroughId) {
+            return value;
+        }
+    }
+
+    console.warn(`⚠️ Borough ID "${boroughId}" not found in database cache`);
+    return null;
 }
 
 /**
@@ -144,8 +196,8 @@ function getSortConfig(sortByValue) {
 }
 
 /**
- * Get neighborhood IDs from frontend checkbox values
- * @param {Array<string>} neighborhoodValues - Array of checkbox values (can be kebab-case or database IDs)
+ * Get neighborhood IDs from frontend checkbox values (database IDs expected)
+ * @param {Array<string>} neighborhoodValues - Array of checkbox values (database IDs)
  * @returns {Array<string>} Array of Supabase neighborhood IDs
  */
 function getNeighborhoodIds(neighborhoodValues) {
@@ -153,19 +205,16 @@ function getNeighborhoodIds(neighborhoodValues) {
         return [];
     }
 
-    return neighborhoodValues
-        .map(value => {
-            // First check if it's already a Supabase/Bubble ID (contains 'x' and is long)
-            if (typeof value === 'string' && value.includes('x') && value.length >= 20) {
-                return value;
-            }
-            // Fallback to hardcoded mapping for backwards compatibility
-            if (NEIGHBORHOOD_ID_MAP[value]) {
-                return NEIGHBORHOOD_ID_MAP[value];
-            }
-            return undefined;
-        })
-        .filter(id => id !== undefined);
+    // Neighborhoods are already stored with database IDs as values
+    // No mapping needed - return as-is
+    return neighborhoodValues.filter(value => {
+        // Validate it looks like a database ID (contains 'x' and is long)
+        if (typeof value === 'string' && value.includes('x') && value.length >= 20) {
+            return true;
+        }
+        console.warn(`⚠️ Invalid neighborhood ID format: "${value}" - expected database ID`);
+        return false;
+    });
 }
 
 /**
@@ -213,15 +262,21 @@ function buildFilterConfig(filterInputs) {
 
 // Export for use in other scripts
 window.FilterConfig = {
-    BOROUGH_IDS,
+    // Initialization (MUST be called after Supabase is ready)
+    initializeFilterConfig,
+
+    // Dynamic data accessors
+    getBoroughId,
+    getBoroughDisplayName,
+    getBoroughValueFromId,
+    getNeighborhoodIds,
+
+    // Static configuration (safe to use without initialization)
     WEEK_PATTERNS,
     PRICE_TIERS,
     SORT_OPTIONS,
-    NEIGHBORHOOD_ID_MAP,
-    getBoroughId,
     getWeekPattern,
     getPriceRange,
     getSortConfig,
-    getNeighborhoodIds,
     buildFilterConfig
 };
