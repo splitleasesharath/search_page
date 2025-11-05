@@ -48,22 +48,22 @@ const PRICE_TIERS = {
  */
 const SORT_OPTIONS = {
     'recommended': {
-        field: 'Modified Date',
+        field: '"Modified Date"',
         ascending: false,
         description: 'Our curated recommendations'
     },
     'price-low': {
-        field: 'Standarized Minimum Nightly Price (Filter)',
+        field: '"Standarized Minimum Nightly Price (Filter)"',
         ascending: true,
         description: 'Lowest price first'
     },
     'most-viewed': {
-        field: 'Metrics - Click Counter',
+        field: '"Metrics - Click Counter"',
         ascending: false,
         description: 'Most popular listings'
     },
     'recent': {
-        field: 'Created Date',
+        field: '"Created Date"',
         ascending: false,
         description: 'Newest listings first'
     }

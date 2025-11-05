@@ -71,6 +71,7 @@ window.populateNeighborhoods = populateNeighborhoods;
 window.setupEventListeners = setupEventListeners;
 window.updateListingCount = updateListingCount;
 window.renderListings = renderListings;
+window.resetAllFilters = resetAllFilters;
 
 // Main application JavaScript
 document.addEventListener('DOMContentLoaded', function() {
@@ -623,19 +624,30 @@ async function applyFilters() {
 
         // Fetch filtered listings from Supabase
         let filteredListings = await window.SupabaseAPI.getListings(filterConfig);
-        let didFallback = false;
 
-        // Fallback: If no results and filters are applied, show all listings
-        if (filteredListings.length === 0 && Object.keys(filterConfig).some(key =>
+        // Check if any non-sort filters are applied
+        const hasActiveFilters = Object.keys(filterConfig).some(key =>
             key !== 'sort' && filterConfig[key] && (Array.isArray(filterConfig[key]) ? filterConfig[key].length > 0 : true)
-        )) {
-            console.log('⚠️ No listings match filters, showing all available listings as fallback');
+        );
 
-            // Fetch all listings without filters
+        // Handle zero results case: Automatically show all listings with fallback message
+        let didFallback = false;
+        if (filteredListings.length === 0 && hasActiveFilters) {
+            console.log('⚠️ No listings match current filters - showing all listings as fallback');
+
+            // Fetch all listings without filters (keeping only the sort preference)
             filteredListings = await window.SupabaseAPI.getListings({
-                sort: filterConfig.sort // Keep the sort preference
+                sort: filterConfig.sort
             });
+
             didFallback = true;
+
+            // Show informative notice that filters yielded 0 results
+            showFilterResetNotice('No listings match your current filters. Showing all available listings instead.');
+        } else {
+            // Clear notices when we have valid results
+            clearFilterResetNotice();
+            clearNoResultsNotice();
         }
 
         // Update the display
@@ -644,13 +656,8 @@ async function applyFilters() {
 
         initializeLazyLoading(filteredListings);
 
-        // Show or clear filter reset notice based on fallback
-        if (didFallback) {
-            showFilterResetNotice('No results for your selections. Filters were reset to show all listings.');
-        } else {
-            clearFilterResetNotice();
-        }
-        updateListingCount(filteredListings.length);
+        // Update count - show search results (0) when in fallback mode, otherwise show actual count
+        updateListingCount(didFallback ? 0 : filteredListings.length, didFallback ? filteredListings.length : null);
 
         // Update map markers to match only currently displayed cards (not all filtered results)
         // This ensures map shows only what's visible in the listing cards
@@ -711,6 +718,118 @@ function clearFilterResetNotice() {
     if (notice && notice.parentNode) {
         notice.parentNode.removeChild(notice);
     }
+}
+
+// Display a "No listings found" notice when filters yield zero results
+function showNoResultsNotice() {
+    const section = document.querySelector('.listings-section');
+    const container = document.getElementById('listingsContainer');
+    if (!section || !container) return;
+
+    // Clear any old reset notice
+    clearFilterResetNotice();
+
+    let notice = document.getElementById('noResultsNotice');
+    if (!notice) {
+        notice = document.createElement('div');
+        notice.id = 'noResultsNotice';
+        notice.className = 'no-results-notice';
+        notice.style.cssText = `
+            margin: 12px 0 8px 0;
+            padding: 16px 18px;
+            border-radius: 10px;
+            background: #FEF2F2;
+            color: #991B1B;
+            border: 1px solid #FCA5A5;
+            font-family: Inter, sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        `;
+        // Insert above the listings container
+        section.insertBefore(notice, container);
+    }
+
+    notice.innerHTML = `
+        <span>No listings match your current filters. Try adjusting your selection.</span>
+        <button onclick="resetAllFilters()" style="
+            padding: 6px 12px;
+            background: #DC2626;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background 0.2s;
+        " onmouseover="this.style.background='#B91C1C'" onmouseout="this.style.background='#DC2626'">
+            Reset Filters
+        </button>
+    `;
+}
+
+// Remove the no results notice if present
+function clearNoResultsNotice() {
+    const notice = document.getElementById('noResultsNotice');
+    if (notice && notice.parentNode) {
+        notice.parentNode.removeChild(notice);
+    }
+}
+
+// Reset all filters to their default state
+async function resetAllFilters() {
+    console.log('🔄 Resetting all filters to defaults...');
+
+    // Reset filter UI controls to defaults
+    const boroughSelect = document.getElementById('boroughSelect');
+    const weekPattern = document.getElementById('weekPattern');
+    const priceTier = document.getElementById('priceTier');
+    const sortBy = document.getElementById('sortBy');
+
+    // Reset selects to their default values
+    if (boroughSelect && boroughSelect.options.length > 0) {
+        // Try to select Manhattan by default, or first option
+        const manhattanOption = Array.from(boroughSelect.options).find(opt =>
+            opt.value === 'manhattan' || opt.textContent === 'Manhattan'
+        );
+        if (manhattanOption) {
+            boroughSelect.value = manhattanOption.value;
+        } else {
+            boroughSelect.selectedIndex = 0;
+        }
+    }
+
+    if (weekPattern) weekPattern.value = 'every-week';
+    if (priceTier) priceTier.value = 'all';
+    if (sortBy) sortBy.value = 'recommended';
+
+    // Uncheck all neighborhood checkboxes
+    const neighborhoodCheckboxes = document.querySelectorAll('.neighborhood-list input[type="checkbox"]');
+    neighborhoodCheckboxes.forEach(checkbox => {
+        checkbox.checked = false;
+    });
+
+    // Update location text
+    updateLocationText();
+
+    // Re-populate neighborhoods for the newly selected borough
+    const selectedBorough = boroughSelect?.value;
+    const boroughId = window.FilterConfig ? window.FilterConfig.getBoroughId(selectedBorough) : null;
+    await populateNeighborhoods(boroughId);
+    currentPopulatedBoroughId = boroughId;
+
+    // Clear the notice
+    clearNoResultsNotice();
+    clearFilterResetNotice();
+
+    // Apply filters with the reset values (will show all listings with default filters)
+    await applyFilters();
+
+    console.log('✅ Filters reset successfully');
 }
 
 // Filter neighborhoods in the list
@@ -817,10 +936,15 @@ async function populateNeighborhoods(boroughId = null) {
 }
 
 // Update listing count
-function updateListingCount(count = listingsData.length) {
+function updateListingCount(count = listingsData.length, fallbackCount = null) {
     const countElement = document.getElementById('listingCount');
     if (countElement) {
-        countElement.textContent = `${count} listings found`;
+        if (fallbackCount !== null) {
+            // In fallback mode: show search result count (0) not the fallback count
+            countElement.textContent = `${count} listings found`;
+        } else {
+            countElement.textContent = `${count} listings found`;
+        }
     }
 }
 

@@ -66,41 +66,41 @@ class SupabaseAPI {
             // Apply borough filter
             if (filters.boroughs && filters.boroughs.length > 0) {
                 console.log('  🏙️ Filtering by boroughs:', filters.boroughs.length);
-                query = query.in('Location - Borough', filters.boroughs);
+                query = query.in('"Location - Borough"', filters.boroughs);
             }
 
             // Apply week pattern filter
             if (filters.weekPatterns && filters.weekPatterns.length > 0) {
                 console.log('  📅 Filtering by week patterns:', filters.weekPatterns);
-                query = query.in('Weeks offered', filters.weekPatterns);
+                query = query.in('"Weeks offered"', filters.weekPatterns);
             }
 
             // Apply price range filter
             if (filters.priceRange) {
                 console.log('  💰 Filtering by price range:', filters.priceRange);
                 if (filters.priceRange.min !== undefined) {
-                    query = query.gte('Standarized Minimum Nightly Price (Filter)', filters.priceRange.min);
+                    query = query.gte('"Standarized Minimum Nightly Price (Filter)"', filters.priceRange.min);
                 }
                 if (filters.priceRange.max !== undefined) {
-                    query = query.lte('Standarized Minimum Nightly Price (Filter)', filters.priceRange.max);
+                    query = query.lte('"Standarized Minimum Nightly Price (Filter)"', filters.priceRange.max);
                 }
             }
 
             // Apply neighborhood filter
             if (filters.neighborhoods && filters.neighborhoods.length > 0) {
                 console.log('  🏘️ Filtering by neighborhoods:', filters.neighborhoods.length);
-                query = query.in('Location - Hood', filters.neighborhoods);
+                query = query.in('"Location - Hood"', filters.neighborhoods);
             }
 
-            // Apply sorting (wrap field names with special characters in quotes)
+            // Apply sorting (field names already quoted in filter-config.js)
             if (filters.sort && filters.sort.field) {
                 console.log('  🔢 Sorting by:', filters.sort.field, filters.sort.ascending ? 'ASC' : 'DESC');
-                // Supabase requires column names with special chars to be quoted
+                // Field name comes pre-quoted from filter-config.js
                 const sortField = filters.sort.field;
                 query = query.order(sortField, { ascending: filters.sort.ascending });
             } else {
                 // Default sort by modified date
-                query = query.order('Modified Date', { ascending: false });
+                query = query.order('"Modified Date"', { ascending: false });
             }
 
             const { data, error } = await query;
@@ -409,7 +409,7 @@ class SupabaseAPI {
             const { data, error } = await this.client
                 .from('zat_geo_borough_toplevel')
                 .select('_id, "Display Borough"')
-                .order('Display Borough', { ascending: true });
+                .order('"Display Borough"', { ascending: true });
 
             if (error) {
                 console.error('❌ Error fetching boroughs:', error);
@@ -457,7 +457,7 @@ class SupabaseAPI {
 
             // Filter by borough if provided
             if (boroughId) {
-                query = query.eq('Geo-Borough', boroughId);
+                query = query.eq('"Geo-Borough"', boroughId);
             }
 
             const { data, error } = await query;
