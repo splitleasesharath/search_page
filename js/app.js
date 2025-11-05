@@ -10,6 +10,9 @@ const INITIAL_LOAD_COUNT = 6; // Load first 6 listings initially
 const LOAD_BATCH_SIZE = 6; // Load 6 more listings per scroll
 let lazyLoadObserver = null;
 
+// Track currently populated borough to prevent unnecessary neighborhood repopulation
+let currentPopulatedBoroughId = null;
+
 // Calculate dynamic price from Supabase database
 function calculateDynamicPrice(listing, selectedDaysCount) {
     const nightsCount = Math.max(selectedDaysCount - 1, 1); // n days = (n-1) nights, minimum 1 night
@@ -119,6 +122,7 @@ async function init() {
                     const selectedBorough = boroughSelect?.value;
                     const boroughId = window.FilterConfig ? window.FilterConfig.getBoroughId(selectedBorough) : null;
                     await populateNeighborhoods(boroughId);
+                    currentPopulatedBoroughId = boroughId; // Track initial population
 
                     // Hide loading skeleton
                     if (skeleton) skeleton.classList.remove('active');
@@ -552,6 +556,7 @@ function setupFilterListeners() {
             const selectedBorough = boroughSelect.value;
             const boroughId = window.FilterConfig ? window.FilterConfig.getBoroughId(selectedBorough) : null;
             await populateNeighborhoods(boroughId);
+            currentPopulatedBoroughId = boroughId; // Track the change
         });
         // Initialize on load
         updateLocationText();
@@ -651,11 +656,16 @@ async function applyFilters() {
         // This ensures map shows only what's visible in the listing cards
         updateMapToMatchDisplayedCards();
 
-        // Re-populate neighborhoods based on currently selected borough
+        // Re-populate neighborhoods ONLY if borough has changed (preserves checked state)
         const boroughSelect = document.getElementById('boroughSelect');
         const selectedBorough = boroughSelect?.value;
         const boroughId = window.FilterConfig ? window.FilterConfig.getBoroughId(selectedBorough) : null;
-        await populateNeighborhoods(boroughId);
+
+        // Only repopulate if the borough has actually changed
+        if (boroughId !== currentPopulatedBoroughId) {
+            await populateNeighborhoods(boroughId);
+            currentPopulatedBoroughId = boroughId;
+        }
 
     } catch (error) {
         console.error('❌ Error applying filters:', error);
