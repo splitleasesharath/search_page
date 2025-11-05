@@ -216,10 +216,22 @@ class SupabaseAPI {
         const kitchenType = dbListing['Kitchen Type'] || 'Full Kitchen';
 
         // Extract photos using photoMap to convert IDs to URLs
-        const photos = this.extractPhotos(dbListing['Features - Photos'], photoMap);
+        const photos = this.extractPhotos(dbListing['Features - Photos'], photoMap, id);
 
         // Extract coordinates
-        const address = dbListing['Location - Address'];
+        // Note: Location - Address is stored as a JSON string, not a JSONB object
+        let address = dbListing['Location - Address'];
+
+        // Parse the JSON string if it's a string
+        if (typeof address === 'string') {
+            try {
+                address = JSON.parse(address);
+            } catch (error) {
+                console.warn(`⚠️ Failed to parse address for listing ${id}:`, error);
+                address = null;
+            }
+        }
+
         const coordinates = {
             lat: address?.lat || 40.7580,
             lng: address?.lng || -73.9855
@@ -284,32 +296,56 @@ class SupabaseAPI {
      * Extract photos from Supabase photos field and convert IDs to URLs
      * @param {Array} photosField - Array of photo IDs from Features - Photos
      * @param {Object} photoMap - Map of photo IDs to actual URLs
+     * @param {string} listingId - Listing ID for debugging purposes
      */
-    extractPhotos(photosField, photoMap = {}) {
+    extractPhotos(photosField, photoMap = {}, listingId = null) {
+        console.log(`📸 Processing photos for listing ${listingId}:`, {
+            photosField,
+            photoMapKeys: Object.keys(photoMap).length,
+            photoMapSample: Object.keys(photoMap).slice(0, 3)
+        });
+
         if (!photosField || !Array.isArray(photosField)) {
-            return this.getFallbackImages();
+            console.error(`❌ Listing ${listingId}: No photos field or not an array`);
+            return []; // Return empty array - NO FALLBACK
+        }
+
+        if (photosField.length === 0) {
+            console.error(`❌ Listing ${listingId}: Photos array is empty`);
+            return []; // Return empty array - NO FALLBACK
         }
 
         // Convert photo IDs to actual URLs using photoMap
-        const photoUrls = photosField
-            .filter(photoId => typeof photoId === 'string')
-            .map(photoId => photoMap[photoId])
-            .filter(url => url !== undefined && url !== null)
-            .slice(0, 5); // Limit to 5 images
+        const photoUrls = [];
+        const missingPhotoIds = [];
 
-        return photoUrls.length > 0 ? photoUrls : this.getFallbackImages();
-    }
+        for (const photoId of photosField) {
+            if (typeof photoId !== 'string') {
+                console.error(`❌ Listing ${listingId}: Invalid photo ID type:`, typeof photoId, photoId);
+                continue;
+            }
 
-    /**
-     * Get fallback images when no photos available
-     */
-    getFallbackImages() {
-        const fallbackImages = [
-            'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop',
-            'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400&h=300&fit=crop',
-            'https://images.unsplash.com/photo-1484154218962-a197022b5858?w=400&h=300&fit=crop'
-        ];
-        return fallbackImages;
+            const url = photoMap[photoId];
+            if (!url) {
+                console.error(`❌ Listing ${listingId}: Photo ID "${photoId}" NOT FOUND in photoMap`);
+                missingPhotoIds.push(photoId);
+            } else {
+                console.log(`✅ Listing ${listingId}: Photo ID "${photoId}" → ${url.substring(0, 60)}...`);
+                photoUrls.push(url);
+            }
+        }
+
+        if (missingPhotoIds.length > 0) {
+            console.error(`❌ Listing ${listingId}: Missing ${missingPhotoIds.length} photo URLs:`, missingPhotoIds);
+        }
+
+        if (photoUrls.length === 0) {
+            console.error(`❌ Listing ${listingId}: NO VALID PHOTO URLS RESOLVED - returning empty array`);
+        } else {
+            console.log(`✅ Listing ${listingId}: Resolved ${photoUrls.length} photo URLs`);
+        }
+
+        return photoUrls.slice(0, 5); // Return actual photos only, limit to 5
     }
 
     /**

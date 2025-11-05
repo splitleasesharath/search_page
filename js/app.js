@@ -335,7 +335,7 @@ async function createListingCard(listing) {
     const hasMultipleImages = listing.images && listing.images.length > 1;
     const imageNavStyle = hasMultipleImages ? '' : 'style="display: none;"';
 
-    // Build the card HTML - conditionally include image section
+    // Build the card HTML - show diagnostic placeholder if no images
     const imageSection = hasImages ? `
         <div class="listing-images" data-current="0" data-total="${listing.images.length}">
             <img src="${listing.images[0]}" alt="${listing.title}">
@@ -349,7 +349,19 @@ async function createListingCard(listing) {
             </button>
             ${listing.isNew ? '<span class="new-badge">New Listing</span>' : ''}
         </div>
-    ` : '';
+    ` : `
+        <div class="listing-images no-images" style="background: #f3f4f6; display: flex; align-items: center; justify-content: center; min-height: 200px; position: relative;">
+            <div style="text-align: center; padding: 20px; color: #ef4444;">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin: 0 auto 12px;">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                    <circle cx="8.5" cy="8.5" r="1.5"/>
+                    <polyline points="21 15 16 10 5 21"/>
+                </svg>
+                <div style="font-size: 14px; font-weight: 600; margin-bottom: 4px;">NO IMAGES AVAILABLE</div>
+                <div style="font-size: 12px; color: #9ca3af;">Listing ID: ${listing.id}</div>
+            </div>
+        </div>
+    `;
 
     card.innerHTML = `
         ${imageSection}
