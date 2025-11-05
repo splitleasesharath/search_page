@@ -1,439 +1,702 @@
-# Split Lease Search Page Replica
+# Split Lease Search Page
 
-A fully responsive replica of the Split Lease search page built with vanilla HTML, CSS, and JavaScript.
+A modern, high-performance property search application for flexible shared accommodations with weekly scheduling. Built with vanilla JavaScript and React islands architecture, powered by Supabase and Google Maps.
 
-## Features
+## 📋 Table of Contents
 
-- ✅ **Fully Responsive Design**
-  - Desktop layout (1024px+): Split view with listings and map
-  - Tablet layout (768px-1023px): Single column with hidden map
-  - Mobile layout (<768px): Optimized single column with collapsible filters
-
-- ✅ **Complete Listing Data**
-  - 10 real listings from Split Lease website
-  - Accurate pricing (starting and full prices)
-  - Host information with verification badges
-  - Property details and amenities
-
-- ✅ **Interactive Features**
-  - Filter by borough, price, and week patterns
-  - Sort by recommendations, price, views, or recency
-  - Image carousel for each listing
-  - Favorite/heart functionality
-  - Mobile-friendly filter and map toggles
-
-- ✅ **Google Maps Integration**
-  - Custom price markers
-  - Info windows with listing details
-  - Clustering for nearby listings
-  - Street/Satellite view toggle
-
-## Setup Instructions
-
-### 1. Quick Start (No Map)
-
-Simply open the `index.html` file in your web browser:
-
-```bash
-cd split-lease-replica
-open index.html  # macOS
-# OR
-start index.html  # Windows
-# OR
-xdg-open index.html  # Linux
-```
-
-### 2. With Google Maps
-
-To enable the interactive map, you need a Google Maps API key:
-
-1. Get a Google Maps API key from [Google Cloud Console](https://console.cloud.google.com/)
-2. Enable the Maps JavaScript API
-3. Replace `YOUR_API_KEY` in `index.html` (line ~247):
-   ```html
-   <script async defer src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap"></script>
-   ```
-
-### 3. Using a Local Server (Recommended)
-
-For the best experience, use a local server:
-
-#### Option A: Python (if installed)
-```bash
-# Python 3
-python -m http.server 8000
-
-# Python 2
-python -m SimpleHTTPServer 8000
-```
-
-#### Option B: Node.js (if installed)
-```bash
-# Install http-server globally
-npm install -g http-server
-
-# Run server
-http-server -p 8000
-```
-
-#### Option C: VS Code Live Server
-1. Install the "Live Server" extension
-2. Right-click on `index.html`
-3. Select "Open with Live Server"
-
-Then navigate to `http://localhost:8000` in your browser.
-
-## File Structure
-
-```
-split-lease-replica/
-├── index.html          # Main HTML file
-├── css/
-│   ├── styles.css      # Desktop styles
-│   └── responsive.css  # Mobile/tablet styles
-├── js/
-│   ├── data.js         # Listing data (10 properties)
-│   └── app.js          # Main application logic
-├── images/            # Placeholder images
-└── README.md          # This file
-```
-
-## Testing Responsive Design
-
-### Desktop View
-- Resize browser window to 1024px or wider
-- Features: Split view with listings grid and map side-by-side
-
-### Tablet View
-- Resize to 768px - 1023px
-- Features: 2-column listing grid, hidden map (accessible via button)
-
-### Mobile View
-- Resize to less than 768px
-- Features: Single column, collapsible filters, bottom navigation
-
-### Browser DevTools
-1. Open Chrome/Firefox DevTools (F12)
-2. Click the device toolbar icon
-3. Select a device preset or custom size
-4. Test different viewports
-
-## Features Breakdown
-
-### Filters
-- **Borough**: 7 options (Manhattan, Brooklyn, Queens, etc.)
-- **Neighborhoods**: 29 Manhattan neighborhoods with search
-- **Week Pattern**: 4 scheduling options
-- **Price Tiers**: 5 ranges (<$200 to $500+/night)
-- **Sort**: Recommendations, Price, Views, Recent
-
-### Listing Cards
-- Image carousel with navigation
-- "New Listing" badges
-- Host profiles with verification
-- Dual pricing display
-- Message buttons
-- Property details (bedrooms, bathrooms, kitchen)
-
-### Mobile Optimizations
-- Touch-friendly buttons (minimum 44px)
-- Swipeable image galleries
-- Collapsible filter panel
-- Full-screen map view
-- Sticky navigation bars
-
-## Customization
-
-### Adding New Listings
-Edit `js/data.js` and add to the `listingsData` array:
-
-```javascript
-{
-    id: 11,
-    title: "Your Property Title",
-    location: "Neighborhood, Borough",
-    price: { starting: 250, full: 350 },
-    // ... other properties
-}
-```
-
-### Styling Changes
-- Main styles: `css/styles.css`
-- Responsive breakpoints: `css/responsive.css`
-- Colors and fonts can be customized using CSS variables
-
-### Filter Logic
-Modify `js/app.js` function `applyFilters()` to change filtering behavior.
-
-## Browser Support
-- Chrome 90+
-- Firefox 88+
-- Safari 14+
-- Edge 90+
-- Mobile browsers (iOS Safari, Chrome Mobile)
-
-## Known Limitations
-- Map requires API key to function
-- Images are placeholders (replace with actual property photos)
-- Filter persistence not implemented (refreshes reset filters)
-- No backend integration (static data only)
+- [Overview](#overview)
+- [Key Features](#key-features)
+- [Quick Start](#quick-start)
+- [Detailed Setup](#detailed-setup)
+- [Usage Guide](#usage-guide)
+- [Architecture](#architecture)
+- [Technologies](#technologies)
+- [Troubleshooting](#troubleshooting)
+- [Contributing](#contributing)
+- [License](#license)
 
 ---
 
-## Supabase Database Setup
+## 🎯 Overview
 
-This application now supports **Supabase** as a production database with **134 active listings**! Supabase provides a PostgreSQL database with real-time updates, advanced filtering, and secure API access.
+Split Lease Search is a progressive web application that enables users to find and filter shared accommodations across NYC and New Jersey with flexible weekly scheduling. The platform features advanced filtering, dynamic pricing based on stay duration, interactive maps, and AI-powered market research.
 
-### Quick Setup (5 minutes)
+### What Makes It Special
 
-1. **Get Your Supabase Anon Key**
-   - Go to https://supabase.com/dashboard
-   - Open your project (qcfifybkaddcoimjroca)
-   - Navigate to **Settings** → **API**
-   - Copy the **anon public** key (starts with `eyJhbGci...`)
-
-2. **Create Configuration File**
-   - Create `js/config.local.js` in your project
-   - Add your anon key:
-     ```javascript
-     window.ENV = window.ENV || {};
-     window.ENV.SUPABASE_ANON_KEY = 'your_actual_anon_key_here';
-     ```
-
-3. **Test the Connection**
-   - Open `tests/test-supabase-api.html` in your browser
-   - Click "Run All Tests"
-   - All 18 tests should pass
-
-**Important:** The `config.local.js` file is git-ignored and should NEVER be committed to version control.
-
-### Features
-
-- **134 Active Listings**: Real production data from PostgreSQL database
-- **Smart Caching**: 5-minute cache reduces API calls by ~80%
-- **Advanced Filtering**: Borough, neighborhood, price range, bedrooms, space type
-- **Automatic Fallback**: Gracefully falls back to static data if Supabase unavailable
-- **Secure**: Uses Row-Level Security (RLS) policies for data protection
-
-### Documentation
-
-For complete Supabase setup instructions, see:
-- [**SUPABASE_SETUP.md**](docs/SUPABASE_SETUP.md) - Comprehensive setup guide
-- [**tests/README.md**](tests/README.md) - Test suite documentation
+- **100% Database-Driven Filtering**: All location data loaded dynamically from Supabase—no hardcoded values
+- **Intelligent Pricing**: Real-time price calculations based on selected nights (2-7 nights)
+- **Advanced Schedule Selector**: React-powered UI with contiguous day validation
+- **Lazy Loading**: Fast initial page load with progressive content rendering (6 listings per batch)
+- **Offline Capability**: IndexedDB backup for resilient performance
+- **Mobile-First Design**: Fully responsive across all device sizes
 
 ---
 
-## Test Suite
+## ✨ Key Features
 
-This project includes a comprehensive test suite with **43 tests** covering all major components:
+### 🔍 Advanced Filtering System
 
-### Test Files
+**6 Filter Groups**:
+1. **Borough Filter** - Select from 7 NYC/NJ boroughs (database-driven)
+2. **Neighborhood Filter** - Multi-select from 293+ neighborhoods with real-time search
+3. **Week Pattern Filter** - Choose rental patterns (every week, alternating weeks, etc.)
+4. **Price Tier Filter** - Select price ranges (<$200 to $500+)
+5. **Sort Options** - Recommended, price, views, or recent additions
+6. **Schedule Selector** - Interactive 7-day picker with 2-5 contiguous day constraint
 
-1. **tests/test-supabase-api.html** (18 tests)
-   - API initialization and connection
-   - Data fetching and transformation
-   - Filtering (borough, neighborhood, price, bedrooms)
-   - Pagination and sorting
-   - Error handling
+### 🗺️ Interactive Mapping
 
-2. **tests/test-logger.html** (15 tests)
-   - Logging system validation
-   - Performance timers
-   - Log history and export
-   - Log level management
+- **Google Maps Integration** with custom price markers
+- **Property Clustering** for high-density areas
+- **Info Windows** with listing previews on marker click
+- **Synchronized Updates** - map markers reflect current filters
+- **Street/Satellite Views** with zoom controls
 
-3. **tests/test-integration.html** (10 tests)
-   - End-to-end data flow
-   - UI component validation
-   - Filter combinations
-   - Performance tracking
+### 💰 Dynamic Pricing
 
-### Running Tests
+- **Real-Time Calculations** based on selected nights
+- **Per-Night Rates** for 2, 3, 4, 5, and 7-night stays
+- **Instant Updates** when schedule changes
+- **Transparent Pricing** - see exactly what you'll pay per night
 
-Simply open any test HTML file in your browser:
-```bash
-open tests/test-supabase-api.html
-open tests/test-logger.html
-open tests/test-integration.html
-```
+### 🤖 AI Market Research
 
-Or run automated validation:
-```bash
-node tests/run-validation.js
-```
+- **Deep Research Feature** - Get personalized market insights
+- **Smart Extraction** - Automatically parses email/phone from freeform text
+- **Auto-Correction** - Fixes common email typos (gmial → gmail)
+- **Multi-Step Wizard** - Guided experience with Lottie animations
+- **Instant Reports** - AI-generated market research delivered to email
 
-**Test Coverage:** ~60% (43 tests, 57 validation checks, 100% pass rate)
+### 📱 Contact & Messaging
 
-For detailed test documentation, see [tests/README.md](tests/README.md)
+- **Direct Host Contact** - Message property owners through modal interface
+- **Form Validation** - Email format and required field checks
+- **Bubble.io Integration** - Reliable message delivery via workflow API
+- **Loading States** - Clear feedback during submission
 
----
+### ⚡ Performance Features
 
-## Security Best Practices
-
-### Configuration Security
-
-1. **Never commit API keys**
-   - Use `js/config.local.js` for all API keys
-   - This file is git-ignored automatically
-   - Check with: `git status` (should not show config.local.js)
-
-2. **Use environment-based configuration**
-   ```javascript
-   // Good: Environment variable with fallback
-   const apiKey = window.ENV?.SUPABASE_ANON_KEY || 'fallback';
-
-   // Bad: Hardcoded API key
-   const apiKey = '05a7a0d1d2400a0b574acd99748e07a0';
-   ```
-
-3. **Review .gitignore regularly**
-   - Database files (*.db, *.sqlite)
-   - Log files (logs/*)
-   - Environment configs (config.local.js)
-   - 240 patterns protect sensitive files
-
-### Data Security
-
-- **RLS Policies**: Supabase uses Row-Level Security to protect data
-- **Anon Key Only**: Use the anon key (safe for frontend), NEVER the service_role key
-- **HTTPS Only**: Always use HTTPS in production
-- **Input Validation**: Validate all user input before API calls
-
-### Security Auditing
-
-Run security review:
-```bash
-node tests/run-validation.js
-# Check logs/security_review_*.log for findings
-```
+- **Lazy Loading** - Load 6 listings at a time for instant initial render
+- **Batch Photo Fetching** - Single database query for all images
+- **Optimized Queries** - Efficient PostgREST filters with proper indexing
+- **Script Cache-Busting** - Version parameters ensure latest code
+- **Intersection Observer** - Native browser API for scroll detection
 
 ---
 
-## Troubleshooting
-
-### Supabase Connection Issues
-
-**Problem:** "Supabase anon key not configured"
-
-**Solution:**
-1. Verify `js/config.local.js` exists
-2. Check that `SUPABASE_ANON_KEY` is set
-3. Ensure key doesn't contain 'PLACEHOLDER'
-4. Run tests: `tests/test-supabase-api.html`
-
----
-
-**Problem:** No listings displayed
-
-**Solution:**
-1. Open browser console (F12)
-2. Check for error messages
-3. Verify API connection: `await SupabaseAPI.init()`
-4. Test fetch: `await SupabaseAPI.fetchListings()`
-5. Check stats: `SupabaseAPI.getStats()`
-
----
-
-**Problem:** Tests failing
-
-**Solution:**
-1. Clear browser cache (Ctrl+Shift+R / Cmd+Shift+R)
-2. Verify internet connection
-3. Check Supabase project status
-4. Review console errors
-5. See [docs/SUPABASE_SETUP.md](docs/SUPABASE_SETUP.md) troubleshooting section
-
----
-
-### Performance Issues
-
-**Problem:** Slow page loading
-
-**Solution:**
-1. Check cache stats: `SupabaseAPI.getStats()`
-2. Use pagination: `fetchListings({ limit: 20 })`
-3. Enable browser caching
-4. Use local development server
-
----
-
-### General Troubleshooting
-
-For more detailed troubleshooting:
-- [docs/SUPABASE_SETUP.md](docs/SUPABASE_SETUP.md) - Database troubleshooting
-- [docs/LOGS.md](docs/LOGS.md) - Logging system guide
-- [tests/README.md](tests/README.md) - Test suite help
-- Check `logs/` directory for error logs
-
----
-
-## Project Documentation
-
-Complete documentation is available in the `/docs` directory:
-
-- **[STRUCTURE.md](docs/STRUCTURE.md)** - Project structure and organization
-- **[SUPABASE_SETUP.md](docs/SUPABASE_SETUP.md)** - Supabase configuration guide
-- **[LOGS.md](docs/LOGS.md)** - Logging system documentation
-- **[HANDOFF.md](docs/HANDOFF.md)** - Project handoff guide
-- **[FINAL_CHECKLIST.md](docs/FINAL_CHECKLIST.md)** - Pre-deployment checklist
-
-### Additional Resources
-
-- **[tests/README.md](tests/README.md)** - Test suite documentation
-- **[changelog/2025-10-09_changes.md](changelog/2025-10-09_changes.md)** - Recent changes
-- **[context/2025-10-09_initial_analysis.md](context/2025-10-09_initial_analysis.md)** - Technical analysis
-
----
-
-## Development
+## 🚀 Quick Start
 
 ### Prerequisites
 
-- Modern web browser (Chrome 90+, Firefox 88+, Safari 14+, Edge 90+)
-- Local development server (optional but recommended)
-- Supabase anon key (for production database)
-- Git (for version control)
+- Modern web browser (Chrome, Firefox, Safari, Edge)
+- Python 3.x (for local development server) OR any HTTP server
+- API keys (see [Detailed Setup](#detailed-setup))
 
-### Project Structure
+### 5-Minute Setup
 
-```
-search_lite/
-├── docs/           # Documentation
-├── tests/          # Test suite (43 tests)
-├── js/             # JavaScript modules
-├── css/            # Stylesheets
-├── logs/           # Runtime logs (git-ignored)
-├── changelog/      # Change history
-├── context/        # Session analysis
-├── scripts/        # Utility scripts
-└── index.html      # Main application
-```
+```bash
+# 1. Clone the repository
+git clone <repository-url>
+cd search-page-2
 
-See [docs/STRUCTURE.md](docs/STRUCTURE.md) for complete structure documentation.
+# 2. Create configuration file
+# Create js/config.local.js with your API keys:
+cat > js/config.local.js << 'EOF'
+window.ENV = window.ENV || {};
+window.ENV.SUPABASE_ANON_KEY = 'your_supabase_anon_key_here';
+window.ENV.GOOGLE_MAPS_API_KEY = 'your_google_maps_key_here';
+window.ENV.BUBBLE_API_KEY = 'your_bubble_api_key_here';
+EOF
 
-### Logging System
+# 3. Start local server
+python -m http.server 8000
 
-The application includes a professional logging system (`js/logger.js`):
-
-```javascript
-// Log at different levels
-Logger.info('Application started');
-Logger.debug('Detailed diagnostics', { data });
-Logger.warn('Non-critical warning');
-Logger.error('Critical error', { error });
-
-// Performance tracking
-Logger.startTimer('operation');
-// ... do work
-Logger.endTimer('operation');  // Logs duration
-
-// Export logs
-Logger.exportLogs('json');  // Download logs as JSON
+# 4. Open in browser
+# Navigate to http://localhost:8000
 ```
 
-See [docs/LOGS.md](docs/LOGS.md) for complete logging documentation.
+**Note**: You'll need to replace the placeholder API keys with actual values. See [Detailed Setup](#detailed-setup) for how to obtain them.
 
 ---
 
-## License
-This is a demonstration replica for educational purposes.
+## 🛠️ Detailed Setup
+
+### 1. Environment Configuration
+
+Create `js/config.local.js` in the project root (this file is git-ignored):
+
+```javascript
+window.ENV = window.ENV || {};
+
+// Supabase Configuration
+window.ENV.SUPABASE_URL = 'https://qcfifybkaddcoimjroca.supabase.co';
+window.ENV.SUPABASE_ANON_KEY = 'your_actual_supabase_anon_key';
+
+// Google Maps API
+window.ENV.GOOGLE_MAPS_API_KEY = 'your_google_maps_api_key';
+
+// Bubble.io Configuration (optional for contact features)
+window.ENV.BUBBLE_API_KEY = 'your_bubble_api_key';
+window.ENV.BUBBLE_API_BASE_URL = 'https://app.split.lease/api/1.1';
+window.ENV.BUBBLE_MESSAGING_ENDPOINT = 'https://app.split.lease/api/1.1/wf/core-contact-host-send-message';
+```
+
+### 2. Obtain API Keys
+
+#### Supabase Setup
+
+1. Create account at [supabase.com](https://supabase.com)
+2. Create new project or use existing
+3. Go to **Settings → API**
+4. Copy:
+   - **Project URL** → `SUPABASE_URL`
+   - **anon/public key** → `SUPABASE_ANON_KEY`
+
+**Important**: The anon key is safe for frontend use and has Row Level Security (RLS) policies applied.
+
+#### Google Maps API Setup
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com)
+2. Create new project or select existing
+3. Enable APIs:
+   - **Maps JavaScript API**
+   - **Places API**
+4. Go to **Credentials** → **Create Credentials** → **API Key**
+5. **Restrict the key** (recommended):
+   - Application restrictions: HTTP referrers
+   - Add your domain(s)
+   - API restrictions: Select only Maps JavaScript API and Places API
+
+#### Bubble.io Setup (Optional)
+
+**For Read-Only Features**: No setup needed—existing endpoints work out of the box.
+
+**For Contact/Messaging Features**: Contact Split Lease team for API key.
+
+### 3. Database Setup
+
+The application connects to an existing Supabase database. If you need to set up your own:
+
+#### Required Tables
+
+1. **`listing`** - Main property listings (111 columns)
+2. **`listing_photo`** - Photo URLs linked to listings
+3. **`zat_geo_borough_toplevel`** - Borough lookup table
+4. **`zat_geo_hood_mediumlevel`** - Neighborhood lookup table
+5. **`zat_features_listingtype`** - Space type lookup (Entire Place, Private Room)
+6. **`informationaltexts`** - Dynamic tooltip content
+
+See [TECHNICAL_REFERENCE.md](./TECHNICAL_REFERENCE.md) for complete schema details.
+
+### 4. Install Dependencies (Optional)
+
+For React component development:
+
+```bash
+npm install
+```
+
+**Dependencies**:
+- `react@18.2.0` - React library
+- `react-dom@18.2.0` - React DOM renderer
+- `styled-components@6.1.0` - CSS-in-JS styling
+- `playwright@1.55.1` - Testing framework
+
+### 5. Build React Components (Optional)
+
+If modifying the Schedule Selector or other React components:
+
+```bash
+# One-time build
+npm run build:components
+
+# Watch mode for development
+npm run dev:components
+```
+
+Output: `dist/schedule-selector.js`
+
+### 6. Production Deployment
+
+#### Option A: Static Hosting (Netlify, Vercel, Cloudflare Pages)
+
+```bash
+# Build production assets
+npm run build
+
+# Deploy dist/ folder to your hosting provider
+```
+
+#### Option B: Traditional Web Server (Apache, Nginx)
+
+1. Copy all files to web root
+2. Ensure `js/config.local.js` exists with production keys
+3. Configure HTTPS (required for geolocation and some APIs)
+4. Set cache headers for static assets
+
+#### Environment-Specific Configuration
+
+For different environments (dev/staging/prod), use build scripts:
+
+```bash
+# Generate config from environment variables
+node build-cloudflare.js
+```
+
+This replaces placeholders in `config.js.template` with actual environment variables.
+
+---
+
+## 📖 Usage Guide
+
+### For End Users
+
+#### Searching for Properties
+
+1. **Open the application** in your web browser
+2. **Use filters** to narrow results:
+   - Select a **borough** from dropdown
+   - Choose **neighborhoods** (multi-select with search)
+   - Pick your **rental pattern** (weekly, bi-weekly, etc.)
+   - Set **price range**
+   - Choose **sort order**
+3. **Select your schedule**:
+   - Click days in the schedule selector
+   - Must select 2-5 contiguous days
+   - Prices update automatically
+4. **Browse listings**:
+   - Scroll to see more (6 at a time load automatically)
+   - Click photos to view carousel
+   - Check map for locations
+5. **Contact hosts**:
+   - Click **"Contact Host"** on any listing
+   - Fill in your details and message
+   - Submit to send inquiry
+
+#### Using the Map
+
+- **View Mode Toggle**: Switch between Street and Satellite views
+- **Marker Click**: Click price markers to see listing preview
+- **Zoom/Pan**: Use mouse or touch gestures to navigate
+- **Legend**: Blue = available, Purple = selected listing
+
+#### AI Market Research
+
+1. Click the **purple atom icon** (floating button, bottom-right)
+2. Describe your housing needs in freeform text
+3. Include your email/phone (or enter separately)
+4. Confirm contact details
+5. Receive AI-generated market report via email within 24 hours
+
+### For Developers
+
+#### Project Structure
+
+```
+search-page-2/
+├── index.html                 # Main entry point
+├── js/                        # JavaScript modules
+│   ├── app.js                 # Core application logic (1,592 lines)
+│   ├── supabase-api.js        # Database client (537 lines)
+│   ├── filter-config.js       # Dynamic filter configuration (283 lines)
+│   ├── config.js              # Environment config
+│   └── ...                    # Supporting modules
+├── css/                       # Stylesheets
+│   ├── styles.css             # Main styles
+│   ├── responsive.css         # Media queries
+│   └── ai-signup.css          # Modal styles
+├── components/                # React components
+│   ├── ScheduleSelector/      # Day picker component
+│   ├── ContactHost/           # Messaging modal
+│   └── AiSignup/              # Research signup
+├── assets/                    # Images and animations
+└── dist/                      # Built components
+```
+
+#### Key Files & Line Numbers
+
+- **`js/app.js:534`** - `applyFilters()` - Main filter logic
+- **`js/app.js:16`** - `calculateDynamicPrice()` - Pricing calculations
+- **`js/supabase-api.js:46`** - `getListings()` - Database queries
+- **`js/supabase-api.js:191`** - `transformListing()` - Data transformation
+- **`js/filter-config.js:283`** - Dynamic filter configuration
+- **`components/ScheduleSelector/SearchScheduleSelector.tsx:400`** - React day picker
+
+#### Adding New Features
+
+**Add a New Filter**:
+
+1. Update `filter-config.js` to include new filter type
+2. Add UI element in `index.html`
+3. Wire event listener in `app.js:setupEventListeners()`
+4. Update `applyFilters()` in `app.js:534` to handle new filter
+5. Modify `SupabaseAPI.getListings()` to apply database filter
+
+**Add a New Listing Field**:
+
+1. Ensure field exists in Supabase `listing` table
+2. Update `SupabaseAPI.transformListing()` in `supabase-api.js:191` to map field
+3. Update `createListingCard()` in `app.js` to display field
+4. Add CSS styling in `css/styles.css`
+
+**Modify Schedule Selector**:
+
+1. Edit `components/ScheduleSelector/SearchScheduleSelector.tsx`
+2. Build with `npm run build:components`
+3. Test integration with `js/schedule-selector-integration.js`
+
+#### Development Workflow
+
+```bash
+# 1. Start development server
+python -m http.server 8000
+
+# 2. Watch React components (in separate terminal)
+npm run dev:components
+
+# 3. Make changes to files
+# 4. Refresh browser to see updates
+
+# 5. For JavaScript changes - no build needed
+# 6. For React component changes - auto-rebuilt by watch mode
+```
+
+#### Testing
+
+```bash
+# Run Playwright tests
+npm test
+
+# Run specific test file
+npx playwright test tests/filters.spec.js
+
+# Run in headed mode (see browser)
+npx playwright test --headed
+```
+
+---
+
+## 🏗️ Architecture
+
+### Hybrid Architecture: Vanilla JS + React Islands
+
+**Core Philosophy**: Keep the main application lightweight with vanilla JavaScript, use React only for complex interactive components.
+
+```
+┌─────────────────────────────────────────┐
+│          Browser (Client-Side)          │
+├─────────────────────────────────────────┤
+│  Vanilla JavaScript (ES6+)              │
+│  ├── App Controller (app.js)            │
+│  ├── Event Handlers                     │
+│  ├── DOM Manipulation                   │
+│  └── State Management (Window objects)  │
+├─────────────────────────────────────────┤
+│  React Islands (Specific Components)    │
+│  ├── Schedule Selector (TypeScript)     │
+│  ├── Informational Text (Tooltips)      │
+│  └── Contact Host Modal (JSX)           │
+├─────────────────────────────────────────┤
+│  API Layer                              │
+│  ├── Supabase Client (Read Operations)  │
+│  └── Bubble.io API (Write Operations)   │
+└─────────────────────────────────────────┘
+         ↓                    ↓
+┌──────────────────┐  ┌─────────────────┐
+│    Supabase      │  │   Bubble.io     │
+│   (PostgreSQL)   │  │   Workflows     │
+│  - Listings      │  │  - Messaging    │
+│  - Photos        │  │  - AI Research  │
+│  - Locations     │  │  - Auth         │
+└──────────────────┘  └─────────────────┘
+```
+
+### Data Flow Architecture
+
+**Filter Application Flow**:
+```
+User Changes Filter
+    ↓
+Event Listener Triggered
+    ↓
+Collect All Filter Values
+    ↓
+FilterConfig.buildFilterConfig() - Convert to DB format
+    ↓
+SupabaseAPI.getListings(filters) - Query database
+    ↓
+Transform Database Format to App Format
+    ↓
+renderListings() - Update DOM
+    ↓
+updateMapMarkers() - Sync map
+    ↓
+User Sees Updated Results
+```
+
+**Dynamic Pricing Flow**:
+```
+User Selects Days in Schedule Selector
+    ↓
+React Component Callback: onSelectionChange(days)
+    ↓
+Update window.selectedDays global variable
+    ↓
+window.updateAllDisplayedPrices() - Recalculate all cards
+    ↓
+For each listing: calculateDynamicPrice(listing, nightCount)
+    ↓
+Update DOM with new prices
+    ↓
+window.applyFilters() - Re-fetch if filters active
+```
+
+### State Management
+
+**Global State** (Window Objects):
+- `window.ENV` - Environment configuration
+- `window.SupabaseAPI` - Database client instance
+- `window.FilterConfig` - Filter configuration manager
+- `window.currentListings` - Currently displayed listings
+- `window.selectedDays` - Schedule selection (array of day indices)
+- `window.mapInstance` - Google Maps instance
+
+**Component-Local State**:
+- React components use hooks (`useState`, `useEffect`)
+- Vanilla JS modals use object properties
+- Lazy loading uses module-scoped counters
+
+---
+
+## 💻 Technologies
+
+### Frontend Stack
+
+- **HTML5** - Semantic markup
+- **CSS3** - Custom properties, Flexbox, Grid
+- **JavaScript ES6+** - Modern syntax, modules, async/await
+- **React 18** - Component library for complex UI
+- **TypeScript** - Type safety for React components
+- **Styled Components** - CSS-in-JS for React styling
+
+### Backend & Database
+
+- **Supabase** - PostgreSQL database with real-time capabilities
+  - PostgREST API for fast queries
+  - Row Level Security (RLS) policies
+  - Foreign key relationships with data integrity
+- **Bubble.io** - No-code backend for workflows
+  - Message delivery
+  - AI processing coordination
+  - User authentication (future)
+
+### External Services
+
+- **Google Maps Platform**
+  - Maps JavaScript API
+  - Places API
+  - Custom markers and info windows
+- **Lottie** - JSON-based animations
+- **CDN Resources** - React, Supabase client, fonts
+
+### Build & Development
+
+- **Vite** - Fast build tool for React components
+- **TypeScript Compiler** - Type checking
+- **Playwright** - End-to-end testing
+- **Python HTTP Server** - Local development
+
+---
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+#### No Listings Displayed
+
+**Symptoms**: Filters show results count, but no listings appear.
+
+**Cause**: Critical bug in `supabase-api.js:64` - all listings lack `Approved=true` flag.
+
+**Solution**:
+```javascript
+// js/supabase-api.js line 64
+// Remove this line:
+.eq('Approved', true)
+
+// Or change to:
+.in('Approved', [true, null, false])  // Show all regardless of approval
+```
+
+**Verification**: Check browser console for empty result arrays.
+
+#### Map Not Loading
+
+**Symptoms**: Map section shows placeholder or error.
+
+**Causes**:
+1. Invalid Google Maps API key
+2. API not enabled in Google Cloud Console
+3. Domain restriction preventing access
+
+**Solutions**:
+1. Verify `GOOGLE_MAPS_API_KEY` in `config.local.js`
+2. Enable both **Maps JavaScript API** and **Places API**
+3. Add your domain to allowed referrers (or remove restrictions for testing)
+4. Check browser console for specific Google Maps errors
+
+#### Prices Not Updating
+
+**Symptoms**: Changing schedule selector doesn't update listing prices.
+
+**Causes**:
+1. React component not loaded
+2. Integration script failed to wire callback
+3. Missing price fields in database
+
+**Solutions**:
+1. Check console for React errors during initialization
+2. Verify `dist/schedule-selector.js` exists and loads
+3. Confirm `window.updateAllDisplayedPrices` function exists
+4. Check database for `💰Nightly Host Rate for X nights` fields
+
+#### Filters Not Working
+
+**Symptoms**: Selecting filters doesn't change results.
+
+**Causes**:
+1. Filter configuration not initialized
+2. Database connection failed
+3. Incorrect filter IDs
+
+**Solutions**:
+1. Ensure `FilterConfig.initializeFilterConfig()` called after Supabase init
+2. Check browser console for Supabase connection errors
+3. Verify borough/neighborhood IDs match database values
+4. Test with single filter to isolate issue
+
+### Debugging Tips
+
+#### Enable Detailed Logging
+
+```javascript
+// In browser console
+window.DEBUG = true;
+
+// Or uncomment in app.js
+const DEBUG = true;
+```
+
+#### Check Supabase Connection
+
+```javascript
+// Browser console
+console.log(window.SupabaseAPI);
+console.log(window.ENV.SUPABASE_URL);
+console.log(window.ENV.SUPABASE_ANON_KEY);
+
+// Test query
+await window.SupabaseAPI.getBoroughs();
+```
+
+#### Inspect Filter State
+
+```javascript
+// Browser console
+console.log(window.FilterConfig);
+console.log(window.selectedDays);
+console.log(window.currentListings);
+```
+
+### Browser Compatibility
+
+**Supported**:
+- Chrome/Edge 90+
+- Firefox 88+
+- Safari 14+
+- Mobile Safari iOS 14+
+- Chrome Mobile Android 90+
+
+**Known Issues**:
+- Internet Explorer: Not supported (uses ES6+ features)
+- Old Safari (<14): Intersection Observer may need polyfill
+
+---
+
+## 🤝 Contributing
+
+### Development Guidelines
+
+1. **Code Style**:
+   - Use ES6+ features
+   - Prefer `const` over `let`, avoid `var`
+   - Use template literals for strings
+   - Add JSDoc comments for functions
+   - Follow existing naming conventions
+
+2. **Git Workflow**:
+   ```bash
+   # Create feature branch
+   git checkout -b feature/your-feature-name
+
+   # Make changes and commit
+   git add .
+   git commit -m "feat: Add new feature description"
+
+   # Push and create PR
+   git push origin feature/your-feature-name
+   ```
+
+3. **Commit Messages**:
+   - `feat:` - New feature
+   - `fix:` - Bug fix
+   - `docs:` - Documentation changes
+   - `style:` - Code style changes (formatting)
+   - `refactor:` - Code refactoring
+   - `perf:` - Performance improvements
+   - `test:` - Test additions/changes
+   - `chore:` - Build process, dependencies
+
+### Project Priorities
+
+**Current Focus**:
+1. Fix critical Approved filter bug (see `supabase-api.js:64`)
+2. Verify dynamic borough/neighborhood loading
+3. Add comprehensive test coverage
+4. Improve error handling and user feedback
+
+**Future Roadmap**:
+1. Add listing title/description search
+2. Implement user accounts and saved searches
+3. Add favorites/bookmarking
+4. Build host dashboard
+5. Integrate payment processing
+6. Add review/rating system
+
+---
+
+## 📄 License
+
+MIT License - See [LICENSE](./LICENSE) file for details.
+
+---
+
+## 📞 Contact
+
+**Split Lease**
+- Website: [app.split.lease](https://app.split.lease)
+
+---
+
+## 🙏 Acknowledgments
+
+- Built with [Supabase](https://supabase.com)
+- Maps powered by [Google Maps Platform](https://cloud.google.com/maps-platform)
+- Workflows powered by [Bubble.io](https://bubble.io)
+- Animations from [Lottie](https://airbnb.design/lottie/)
+
+---
+
+**Last Updated**: 2025
+**Version**: 1.0.0
+**Status**: Active Development
