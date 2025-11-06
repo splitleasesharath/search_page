@@ -66,8 +66,8 @@ class SupabaseAPI {
             // Build query with filters
             let query = this.client
                 .from('listing')
-                .select('*')
-                .eq('Active', true);
+                .select('*');
+                // Active filter removed - showing all listings regardless of Active status
                 // Removed .eq('Approved', true) - no listings have Approved=true in database
 
             // Apply borough filter
