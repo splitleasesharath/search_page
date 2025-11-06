@@ -5,8 +5,15 @@
 
 class SupabaseAPI {
     constructor() {
-        this.supabaseUrl = 'https://qcfifybkaddcoimjroca.supabase.co';
-        this.supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFjZmlmeWJrYWRkY29pbWpyb2NhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk0NzU0MDUsImV4cCI6MjA3NTA1MTQwNX0.glGwHxds0PzVLF1Y8VBGX0jYz3zrLsgE9KAWWwkYms8';
+        // Use config from window.ENV (set by config.js)
+        this.supabaseUrl = window.ENV?.SUPABASE_URL;
+        this.supabaseKey = window.ENV?.SUPABASE_ANON_KEY;
+
+        if (!this.supabaseUrl || !this.supabaseKey) {
+            console.error('❌ Supabase credentials not found in window.ENV');
+            throw new Error('Supabase credentials missing from config');
+        }
+
         this.client = null;
         this.isInitialized = false;
     }
@@ -92,6 +99,8 @@ class SupabaseAPI {
                 query = query.in('"Location - Hood"', filters.neighborhoods);
             }
 
+            
+
             // Apply sorting (field names already quoted in filter-config.js)
             if (filters.sort && filters.sort.field) {
                 console.log('  🔢 Sorting by:', filters.sort.field, filters.sort.ascending ? 'ASC' : 'DESC');
@@ -110,18 +119,101 @@ class SupabaseAPI {
                 return [];
             }
 
-            console.log(`📊 Retrieved ${data.length} listings from Supabase`);
+            let rows = Array.isArray(data) ? data : [];
 
-            // Collect all unique photo IDs from all listings
-            const allPhotoIds = new Set();
-            data.forEach(listing => {
-                const photos = listing['Features - Photos'];
-                if (Array.isArray(photos)) {
-                    photos.forEach(photoId => {
-                        if (photoId && typeof photoId === 'string') {
-                            allPhotoIds.add(photoId);
+            console.log(`📊 Retrieved ${rows.length} listings from Supabase`);
+
+            // Apply client-side schedule filter when necessary (JSON fields may be double-encoded strings)
+            if (filters.requiredDayNumbers && Array.isArray(filters.requiredDayNumbers) && filters.requiredDayNumbers.length > 0) {
+                console.log('  📅 Applying schedule filter (client):', filters.requiredDayNumbers);
+                const beforeCount = rows.length;
+                const requiredSet = new Set(filters.requiredDayNumbers);
+
+                const numberToDayName = (n) => {
+                    switch (n) {
+                        case 1: return 'Sunday';
+                        case 2: return 'Monday';
+                        case 3: return 'Tuesday';
+                        case 4: return 'Wednesday';
+                        case 5: return 'Thursday';
+                        case 6: return 'Friday';
+                        case 7: return 'Saturday';
+                        default: return null;
+                    }
+                };
+
+                const parseJsonArray = (value) => {
+                    if (Array.isArray(value)) return value;
+                    if (typeof value === 'string') {
+                        try {
+                            const parsed = JSON.parse(value);
+                            return Array.isArray(parsed) ? parsed : null;
+                        } catch (_) {
+                            return null;
                         }
-                    });
+                    }
+                    return null;
+                };
+
+                rows = rows.filter((dbListing) => {
+                    // Try numeric nights array first
+                    const rawNights = dbListing['Nights Available (numbers)'];
+                    const nightsArr = parseJsonArray(rawNights);
+                    if (Array.isArray(nightsArr)) {
+                        const nightNums = new Set(
+                            nightsArr
+                                .map((x) => (typeof x === 'number' ? x : (typeof x === 'string' ? parseInt(x, 10) : NaN)))
+                                .filter((n) => Number.isInteger(n) && n >= 1 && n <= 7)
+                        );
+                        if ([...requiredSet].every((n) => nightNums.has(n))) {
+                            return true;
+                        }
+                    }
+
+                    // Fallback to day names array
+                    const rawDays = dbListing['Days Available (List of Days)'];
+                    const daysArr = parseJsonArray(rawDays);
+                    if (Array.isArray(daysArr)) {
+                        const dayNames = new Set(daysArr.map((d) => (typeof d === 'string' ? d.trim() : '')));
+                        if ([...requiredSet].every((n) => {
+                            const name = numberToDayName(n);
+                            return !!name && dayNames.has(name);
+                        })) {
+                            return true;
+                        }
+                    }
+
+                    return false;
+                });
+
+                console.log(`  ✅ Schedule filter applied: ${rows.length}/${beforeCount} listings match required days`);
+            }
+
+            // Collect all unique photo IDs from all remaining listings (handles string or array)
+            const allPhotoIds = new Set();
+            const collectIdsFrom = (photosField) => {
+                let arr = photosField;
+                if (typeof photosField === 'string') {
+                    try { arr = JSON.parse(photosField); } catch (_) { return; }
+                }
+                if (Array.isArray(arr)) {
+                    for (const id of arr) {
+                        if (id && typeof id === 'string') allPhotoIds.add(id);
+                    }
+                }
+            };
+            
+            // Collect listing photo IDs
+            rows.forEach(listing => collectIdsFrom(listing['Features - Photos']));
+            
+            // Collect host picture IDs (may also be photo IDs needing lookup)
+            rows.forEach(listing => {
+                const hostPicture = listing['Host Picture'] || listing['host picture'];
+                if (hostPicture && typeof hostPicture === 'string') {
+                    // Check if it looks like a photo ID (not a URL)
+                    if (!hostPicture.startsWith('http://') && !hostPicture.startsWith('https://') && !hostPicture.startsWith('//')) {
+                        allPhotoIds.add(hostPicture);
+                    }
                 }
             });
 
@@ -131,7 +223,7 @@ class SupabaseAPI {
             const photoMap = await this.fetchPhotoUrls(Array.from(allPhotoIds));
 
             // Transform the raw Supabase data to match the app's expected format
-            const transformedListings = data.map(listing => this.transformListing(listing, photoMap));
+            const transformedListings = rows.map(listing => this.transformListing(listing, photoMap));
 
             return transformedListings;
         } catch (error) {
@@ -240,6 +332,22 @@ class SupabaseAPI {
         // Extract host info
         const hostName = dbListing['host name'] || 'Host';
         const hostEmail = dbListing['Host email'] || '';
+        
+        // Extract host image - may be a photo ID or direct URL
+        let hostImage = dbListing['Host Picture'] || dbListing['host picture'] || null;
+        if (hostImage && typeof hostImage === 'string') {
+            // If it looks like a photo ID (not a URL), look it up in photoMap
+            if (!hostImage.startsWith('http://') && !hostImage.startsWith('https://') && !hostImage.startsWith('//')) {
+                const resolvedUrl = photoMap[hostImage];
+                if (resolvedUrl) {
+                    console.log(`✅ Listing ${id}: Resolved host picture ID "${hostImage}" → ${resolvedUrl.substring(0, 60)}...`);
+                    hostImage = resolvedUrl;
+                } else {
+                    console.warn(`⚠️ Listing ${id}: Host picture ID "${hostImage}" not found in photoMap`);
+                    hostImage = null; // Set to null if not resolved
+                }
+            }
+        }
 
         // Extract availability info
         const daysAvailable = dbListing['Days Available (List of Days)'] || [];
@@ -277,9 +385,9 @@ class SupabaseAPI {
             bathrooms: bathrooms,
             kitchen: kitchenType,
             host: {
-                name: hostName,
-                image: this.getHostImage(hostName),
-                verified: false
+            name: hostName,
+            image: hostImage,
+            verified: false
             },
             images: photos,
             description: this.generateDescription(bedrooms, bathrooms, kitchenType),
@@ -294,23 +402,37 @@ class SupabaseAPI {
 
     /**
      * Extract photos from Supabase photos field and convert IDs to URLs
-     * @param {Array} photosField - Array of photo IDs from Features - Photos
+     * @param {Array} photosField - Array of photo IDs from Features - Photos (may be double-encoded as string)
      * @param {Object} photoMap - Map of photo IDs to actual URLs
      * @param {string} listingId - Listing ID for debugging purposes
      */
     extractPhotos(photosField, photoMap = {}, listingId = null) {
         console.log(`📸 Processing photos for listing ${listingId}:`, {
             photosField,
+            photoFieldType: typeof photosField,
             photoMapKeys: Object.keys(photoMap).length,
             photoMapSample: Object.keys(photoMap).slice(0, 3)
         });
 
-        if (!photosField || !Array.isArray(photosField)) {
-            console.error(`❌ Listing ${listingId}: No photos field or not an array`);
+        // Handle double-encoded JSONB: Supabase stores "Features - Photos" as JSONB string containing JSON array
+        // Need to parse it to get the actual array
+        let photos = photosField;
+        if (typeof photosField === 'string') {
+            try {
+                photos = JSON.parse(photosField);
+                console.log(`🔧 Listing ${listingId}: Parsed double-encoded JSONB string to array`);
+            } catch (error) {
+                console.error(`❌ Listing ${listingId}: Failed to parse photos JSON string:`, error);
+                return []; // Return empty array - NO FALLBACK
+            }
+        }
+
+        if (!photos || !Array.isArray(photos)) {
+            console.error(`❌ Listing ${listingId}: No photos field or not an array after parsing`);
             return []; // Return empty array - NO FALLBACK
         }
 
-        if (photosField.length === 0) {
+        if (photos.length === 0) {
             console.error(`❌ Listing ${listingId}: Photos array is empty`);
             return []; // Return empty array - NO FALLBACK
         }
@@ -319,7 +441,7 @@ class SupabaseAPI {
         const photoUrls = [];
         const missingPhotoIds = [];
 
-        for (const photoId of photosField) {
+        for (const photoId of photos) {
             if (typeof photoId !== 'string') {
                 console.error(`❌ Listing ${listingId}: Invalid photo ID type:`, typeof photoId, photoId);
                 continue;
@@ -379,21 +501,7 @@ class SupabaseAPI {
         return null;
     }
 
-    /**
-     * Get host image based on host name
-     */
-    getHostImage(hostName) {
-        const bubbleHostImages = [
-            'https://50bf0464e4735aabad1cc8848a0e8b8a.cdn.bubble.io/f1728409086161x522086459925635800/Robert.PNG',
-            'https://50bf0464e4735aabad1cc8848a0e8b8a.cdn.bubble.io/f1728409100287x106329658851495860/herbert.PNG',
-            'https://50bf0464e4735aabad1cc8848a0e8b8a.cdn.bubble.io/f1728409115104x181161173223309760/arthur.PNG',
-            'https://50bf0464e4735aabad1cc8848a0e8b8a.cdn.bubble.io/f1728409141343x409613303206629500/julia.PNG',
-            'https://50bf0464e4735aabad1cc8848a0e8b8a.cdn.bubble.io/f1728409157968x114901798371225990/samuel.PNG'
-        ];
-
-        const nameHash = hostName.split('').reduce((hash, char) => hash + char.charCodeAt(0), 0);
-        return bubbleHostImages[nameHash % bubbleHostImages.length];
-    }
+    
 
     /**
      * Check if listing is new (created within last 30 days)

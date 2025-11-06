@@ -126,6 +126,8 @@
                 <div class="filter-group compact neighborhoods-group">
                     <label for="neighborhoodSelect">Refine Neighborhood(s)</label>
                     <input type="text" id="neighborhoodSearch" placeholder="Search neighborhoods..." class="neighborhood-search">
+                    <!-- Selected neighborhood chips display -->
+                    <div class="selected-neighborhoods-chips" id="selectedNeighborhoodsChips"></div>
                     <div class="neighborhood-list">
                         <div style="padding: 10px; color: #666;">Loading neighborhoods...</div>
                     </div>
@@ -231,7 +233,6 @@
         })();
     </script>
     <script src="js/config.js"></script>
-    <script src="js/image-handler.js"></script>
     <!-- Logger Integration -->
     <script src="js/logger.js"></script>
     <!-- Supabase JavaScript Client Library -->
@@ -281,7 +282,16 @@
                 try {
                     const connected = await window.SupabaseAPI.init();
                     if (connected) {
-                        console.log('✅ Backup: Supabase connected, fetching listings...');
+                        console.log('✅ Backup: Supabase connected, initializing FilterConfig...');
+                        
+                        // Initialize FilterConfig with database data (REQUIRED before fetching listings)
+                        if (window.FilterConfig) {
+                            await window.FilterConfig.initializeFilterConfig();
+                        } else {
+                            console.error('❌ FilterConfig not loaded - include filter-config.js before app.js');
+                        }
+
+                        console.log('✅ Backup: FilterConfig initialized, fetching listings...');
                         const listings = await window.SupabaseAPI.fetchListings();
 
                         if (listings && listings.length > 0) {
@@ -335,10 +345,8 @@
     <script src="js/informational-text.js"></script>
     <script>
       // Initialize Informational Text Component with dynamic trigger registration
-      // Store config globally
+      // Store config globally (credentials from window.ENV via config.js)
       window.INFO_TEXT_CONFIG = {
-        supabaseUrl: 'https://qcfifybkaddcoimjroca.supabase.co',
-        supabaseKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFjZmlmeWJrYWRkY29pbWpyb2NhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk0NzU0MDUsImV4cCI6MjA3NTA1MTQwNX0.glGwHxds0PzVLF1Y8VBGX0jYz3zrLsgE9KAWWwkYms8',
         tableName: 'informationaltexts',
         infoId: '1721990409194x255037403710619650'
       };
@@ -362,8 +370,8 @@
         // Initialize component only once
         if (!infoTextInitialized && triggers.length > 0) {
           initInformationalText({
-            supabaseUrl: window.INFO_TEXT_CONFIG.supabaseUrl,
-            supabaseKey: window.INFO_TEXT_CONFIG.supabaseKey,
+            supabaseUrl: window.ENV?.SUPABASE_URL,
+            supabaseKey: window.ENV?.SUPABASE_ANON_KEY,
             tableName: window.INFO_TEXT_CONFIG.tableName,
             triggers: triggers
           });

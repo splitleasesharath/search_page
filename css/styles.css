@@ -435,6 +435,74 @@ body {
     margin-right: 0.5rem;
 }
 
+/* Selected Neighborhoods Chips Display */
+.selected-neighborhoods-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    min-height: 0;
+    transition: min-height 0.2s ease;
+}
+
+.selected-neighborhoods-chips:not(:empty) {
+    min-height: 32px;
+    margin-bottom: 0.75rem;
+}
+
+.neighborhood-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.375rem 0.625rem;
+    background: var(--primary-purple);
+    color: white;
+    border-radius: 20px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1.2;
+    transition: all 0.2s ease;
+    animation: chipFadeIn 0.2s ease;
+}
+
+@keyframes chipFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.neighborhood-chip:hover {
+    background: var(--primary-purple-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(49, 19, 93, 0.2);
+}
+
+.neighborhood-chip-remove {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    font-size: 12px;
+    line-height: 1;
+    padding: 0;
+    border: none;
+    color: white;
+}
+
+.neighborhood-chip-remove:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
 /* Filter Results */
 .filter-results {
     display: flex;
@@ -452,7 +520,7 @@ body {
     margin: 0 auto;
     padding: 2rem;
     display: grid;
-    grid-template-columns: 1fr 0.67fr;
+    grid-template-columns: 1fr 0.8fr;
     gap: 2rem;
     min-height: calc(100vh - 200px);
 }
@@ -1221,4 +1289,71 @@ body {
 /* Smooth scroll behavior for better UX */
 html {
     scroll-behavior: smooth;
+}
+/* ========================================
+   Toast Notification System
+   ======================================== */
+
+.toast {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    min-width: 250px;
+    max-width: 400px;
+    padding: 16px 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    font-size: 14px;
+    font-weight: 500;
+    opacity: 0;
+    transform: translateY(-20px);
+    transition: all 0.3s ease;
+    z-index: 10000;
+    pointer-events: auto;
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.toast.fade-out {
+    opacity: 0;
+    transform: translateY(-20px);
+}
+
+.toast-info {
+    background: #2196F3;
+    color: white;
+}
+
+.toast-success {
+    background: #4CAF50;
+    color: white;
+}
+
+.toast-warning {
+    background: #FF9800;
+    color: white;
+}
+
+.toast-error {
+    background: #F44336;
+    color: white;
+}
+
+/* Stack multiple toasts */
+.toast + .toast {
+    margin-top: 10px;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .toast {
+        top: 10px;
+        right: 10px;
+        left: 10px;
+        max-width: none;
+        min-width: auto;
+    }
 }

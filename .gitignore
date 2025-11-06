@@ -246,3 +246,7 @@ split-lease-replica/
 
 # Dump directory for archived/temporary files
 Dump/
+
+# Planning documents (internal development use)
+plan/
+.playwright-mcp/

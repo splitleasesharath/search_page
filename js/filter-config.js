@@ -257,6 +257,21 @@ function buildFilterConfig(filterInputs) {
         config.neighborhoods = getNeighborhoodIds(filterInputs.neighborhoods);
     }
 
+    // Schedule selector filter: convert 0-based indices (Sun=0) to 1-based (Sun=1)
+    if (Array.isArray(window.selectedDays) && window.selectedDays.length > 0) {
+        const requiredDayNumbers = Array.from(new Set(
+            window.selectedDays
+                .filter(i => typeof i === 'number')
+                .map(i => i + 1) // 0-based -> 1-based
+                .filter(n => n >= 1 && n <= 7)
+        ));
+
+        if (requiredDayNumbers.length > 0) {
+            // Sort for stable logging and easier debugging
+            config.requiredDayNumbers = requiredDayNumbers.sort((a, b) => a - b);
+        }
+    }
+
     return config;
 }
 

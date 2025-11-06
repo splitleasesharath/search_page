@@ -42,8 +42,11 @@
                 console.log('🔄 Selection changed:', selectedDaysArray);
 
                 // Update the global selectedDays array
-                // Convert Day objects to indices: [1, 2, 3, 4, 5]
-                window.selectedDays = selectedDaysArray.map(day => day.index);
+                // Normalize: deduplicate, validate 0-6, and sort ascending
+                const normalizedSelected = [...new Set(selectedDaysArray.map(d => d.index))]
+                    .filter(i => Number.isInteger(i) && i >= 0 && i <= 6)
+                    .sort((a, b) => a - b);
+                window.selectedDays = normalizedSelected.length > 0 ? normalizedSelected : [];
 
                 console.log(`✅ Updated selectedDays: [${window.selectedDays.join(', ')}]`);
 

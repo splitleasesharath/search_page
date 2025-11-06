@@ -4,15 +4,21 @@
 (function() {
     'use strict';
 
-    // Lottie URLs
-    const HEADER_ICON_LOTTIE_URL = 'https://50bf0464e4735aabad1cc8848a0e8b8a.cdn.bubble.io/f1760473171600x280130752685858750/atom%20animation.json';
-    const PARSING_LOTTIE_URL = 'https://50bf0464e4735aabad1cc8848a0e8b8a.cdn.bubble.io/f1722533720265x199451206376484160/Animation%20-%201722533570126.json';
-    const LOADING_LOTTIE_URL = 'https://50bf0464e4735aabad1cc8848a0e8b8a.cdn.bubble.io/f1720724605167x733559911663532000/Animation%20-%201720724343172.lottie';
-    const SUCCESS_LOTTIE_URL = 'https://50bf0464e4735aabad1cc8848a0e8b8a.cdn.bubble.io/f1745939792891x394981453861459140/Report.json';
+    // Lottie URLs (from window.ENV set by config.js)
+    const HEADER_ICON_LOTTIE_URL = window.ENV?.HEADER_ICON_LOTTIE_URL || 'https://50bf0464e4735aabad1cc8848a0e8b8a.cdn.bubble.io/f1760473171600x280130752685858750/atom%20animation.json';
+    const PARSING_LOTTIE_URL = window.ENV?.PARSING_LOTTIE_URL || 'https://50bf0464e4735aabad1cc8848a0e8b8a.cdn.bubble.io/f1722533720265x199451206376484160/Animation%20-%201722533570126.json';
+    const LOADING_LOTTIE_URL = window.ENV?.LOADING_LOTTIE_URL || 'https://50bf0464e4735aabad1cc8848a0e8b8a.cdn.bubble.io/f1720724605167x733559911663532000/Animation%20-%201720724343172.lottie';
+    const SUCCESS_LOTTIE_URL = window.ENV?.SUCCESS_LOTTIE_URL || 'https://50bf0464e4735aabad1cc8848a0e8b8a.cdn.bubble.io/f1745939792891x394981453861459140/Report.json';
 
-    // Bubble API Configuration
-    const BUBBLE_WORKFLOW_URL = 'https://app.split.lease/version-test/api/1.1/wf/ai-signup-guest';
-    const BUBBLE_API_KEY = '5dbb448f9a6bbb043cb56ac16b8de109';
+    // Bubble API Configuration (from window.ENV set by config.js)
+    const BUBBLE_WORKFLOW_URL = window.ENV?.AI_SIGNUP_WORKFLOW_URL;
+    const BUBBLE_API_KEY = window.ENV?.AI_SIGNUP_BUBBLE_KEY;
+
+    // Validate configuration
+    if (!BUBBLE_WORKFLOW_URL || !BUBBLE_API_KEY) {
+        console.error('❌ AI Signup credentials missing from config');
+        console.error('Required: window.ENV.AI_SIGNUP_WORKFLOW_URL and window.ENV.AI_SIGNUP_BUBBLE_KEY');
+    }
 
     // Modal state
     let modalState = {

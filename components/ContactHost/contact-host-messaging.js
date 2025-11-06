@@ -364,31 +364,18 @@ class ContactHostMessaging {
     }
 
     async sendMessageToBubble(messageData) {
-        // DEMO MODE: If no API key or endpoint is configured, use mock mode for testing
-        const isDemoMode = !window.ENV ||
-                          !window.ENV.BUBBLE_API_KEY ||
-                          !window.ENV.BUBBLE_MESSAGING_ENDPOINT;
-
-        if (isDemoMode) {
-            console.warn('⚠️ DEMO MODE: Bubble workflow endpoint not configured');
-            console.log('📋 To enable production mode, set window.ENV.BUBBLE_MESSAGING_ENDPOINT');
-            console.log('📧 Simulating message send...');
-            console.log('Message data:', messageData);
-
-            // Simulate API delay
-            await new Promise(resolve => setTimeout(resolve, 1500));
-
-            console.log('✅ Demo mode: Message would be sent successfully');
-            console.log('💡 Once you create the Bubble workflow, update config.js with the endpoint URL');
-            return {
-                success: true,
-                messageId: 'demo-' + Date.now(),
-                timestamp: new Date().toISOString(),
-                demo: true
-            };
+        // Validate configuration
+        if (!window.ENV?.BUBBLE_MESSAGING_ENDPOINT) {
+            console.error('❌ Bubble messaging endpoint not configured');
+            throw new Error('Messaging service not configured. Please contact support.');
         }
 
-        // PRODUCTION MODE: Real API call
+        if (!window.ENV?.BUBBLE_API_KEY) {
+            console.error('❌ Bubble API key not configured');
+            throw new Error('Messaging service authentication missing. Please contact support.');
+        }
+
+        // Real API call
         try {
             // Use configurable endpoint URL from ENV, with fallback to default
             const bubbleApiUrl = window.ENV.BUBBLE_MESSAGING_ENDPOINT ||

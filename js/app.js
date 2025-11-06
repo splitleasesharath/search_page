@@ -51,7 +51,7 @@ function updateAllDisplayedPrices() {
         const listingId = card.dataset.id;
         const listing = window.currentListings ?
             window.currentListings.find(l => l.id === listingId) :
-            listingsData.find(l => l.id === listingId);
+            null;
 
         if (listing) {
             const dynamicPrice = calculateDynamicPrice(listing, selectedDays.length);
@@ -80,8 +80,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 async function init() {
-    // Initialize day selector
-    initializeDaySelector();
+    // Day selector now handled by React component in schedule-selector-integration.js
 
     // Show loading skeleton
     const skeleton = document.getElementById('loadingSkeleton');
@@ -95,6 +94,13 @@ async function init() {
         const connected = await window.SupabaseAPI.init();
         if (connected) {
             try {
+                // Initialize FilterConfig with database data (REQUIRED before fetching listings)
+                if (window.FilterConfig) {
+                    await window.FilterConfig.initializeFilterConfig();
+                } else {
+                    console.error('❌ FilterConfig not loaded - include filter-config.js before app.js');
+                }
+
                 // Fetch data from Supabase
                 const supabaseData = await window.SupabaseAPI.fetchListings();
                 if (supabaseData && supabaseData.length > 0) {
@@ -103,13 +109,6 @@ async function init() {
                     renderListings(supabaseData);
                     const stats = window.SupabaseAPI.getStats();
                     console.log(`📊 Supabase stats:`, stats);
-
-                    // Initialize FilterConfig with database data (REQUIRED before using filters)
-                    if (window.FilterConfig) {
-                        await window.FilterConfig.initializeFilterConfig();
-                    } else {
-                        console.error('❌ FilterConfig not loaded - include filter-config.js before app.js');
-                    }
 
                     // Update map markers to match displayed cards only (after lazy loading initializes)
                     if (window.mapInstance && window.updateMapMarkers) {
@@ -180,7 +179,9 @@ async function loadMoreListings() {
 
         // Add listing card (now async for image loading)
         const card = await createListingCard(listing);
-        container.appendChild(card);
+        if (card) {
+            container.appendChild(card);
+        }
 
         // Add AI research card after certain positions
         if ((i + 1) === 4 || (i + 1) === 8) {
@@ -335,7 +336,10 @@ async function createListingCard(listing) {
     const hasMultipleImages = listing.images && listing.images.length > 1;
     const imageNavStyle = hasMultipleImages ? '' : 'style="display: none;"';
 
-    // Build the card HTML - show diagnostic placeholder if no images
+    // Build the card HTML
+    if (!hasImages) {
+        console.error('Listing has no images', { id: listing.id, title: listing.title });
+    }
     const imageSection = hasImages ? `
         <div class="listing-images" data-current="0" data-total="${listing.images.length}">
             <img src="${listing.images[0]}" alt="${listing.title}">
@@ -349,19 +353,7 @@ async function createListingCard(listing) {
             </button>
             ${listing.isNew ? '<span class="new-badge">New Listing</span>' : ''}
         </div>
-    ` : `
-        <div class="listing-images no-images" style="background: #f3f4f6; display: flex; align-items: center; justify-content: center; min-height: 200px; position: relative;">
-            <div style="text-align: center; padding: 20px; color: #ef4444;">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin: 0 auto 12px;">
-                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                    <circle cx="8.5" cy="8.5" r="1.5"/>
-                    <polyline points="21 15 16 10 5 21"/>
-                </svg>
-                <div style="font-size: 14px; font-weight: 600; margin-bottom: 4px;">NO IMAGES AVAILABLE</div>
-                <div style="font-size: 12px; color: #9ca3af;">Listing ID: ${listing.id}</div>
-            </div>
-        </div>
-    `;
+    ` : '';
 
     card.innerHTML = `
         ${imageSection}
@@ -380,7 +372,7 @@ async function createListingCard(listing) {
             </div>
             <div class="listing-footer">
                 <div class="host-info">
-                    <img src="${listing.host.image || 'images/default-avatar.png'}" alt="${listing.host.name}" class="host-avatar">
+                    <img src="${listing.host.image}" alt="${listing.host.name}" class="host-avatar">
                     <div class="host-details">
                         <span class="host-name">
                             ${listing.host.name}
@@ -440,13 +432,13 @@ function changeImage(listingId, direction) {
     // Try to find in current listings first
     let listing = window.currentListings ? window.currentListings.find(l => l.id === listingId) : null;
 
-    // Fallback to hardcoded data
     if (!listing) {
-        listing = listingsData.find(l => l.id === listingId);
+        console.error('Listing not found for carousel:', listingId);
+        return;
     }
 
-    if (!listing || !listing.images || listing.images.length <= 1) {
-        console.warn('Listing not found or has no multiple images:', listingId);
+    if (!listing.images || listing.images.length <= 1) {
+        console.warn('Listing has no multiple images:', listingId);
         return;
     }
 
@@ -565,20 +557,31 @@ function setupFilterListeners() {
     if (boroughSelect) {
         boroughSelect.addEventListener('change', async function() {
             updateLocationText();
+
+            // Clear any selected neighborhoods when borough changes
+            clearNeighborhoodSelections();
+
             // Refresh neighborhoods based on selected borough
             const selectedBorough = boroughSelect.value;
             const boroughId = window.FilterConfig ? window.FilterConfig.getBoroughId(selectedBorough) : null;
             await populateNeighborhoods(boroughId);
             currentPopulatedBoroughId = boroughId; // Track the change
+
+            // Re-apply filters with the new borough and cleared neighborhoods
+            applyFilters();
         });
         // Initialize on load
         updateLocationText();
     }
 
-    // Neighborhood checkboxes
+    // Neighborhood checkboxes (event listeners are attached dynamically in populateNeighborhoods)
+    // This is kept for any pre-existing checkboxes on initial load
     const neighborhoodCheckboxes = document.querySelectorAll('.neighborhood-list input[type="checkbox"]');
     neighborhoodCheckboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', applyFilters);
+        checkbox.addEventListener('change', function() {
+            updateNeighborhoodChips();
+            applyFilters();
+        });
     });
 }
 
@@ -694,6 +697,24 @@ async function applyFilters() {
             updateListingCount(window.currentListings.length);
         }
     }
+}
+
+// Toast notification system
+function showToast(message, type = 'info', duration = 5000) {
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`; // info, success, warning, error
+    toast.textContent = message;
+
+    document.body.appendChild(toast);
+
+    // Fade in
+    setTimeout(() => toast.classList.add('show'), 10);
+
+    // Fade out and remove
+    setTimeout(() => {
+        toast.classList.add('fade-out');
+        setTimeout(() => toast.remove(), 500);
+    }, duration);
 }
 
 // Display a notice above the listings when filters are reset due to zero results
@@ -935,7 +956,10 @@ async function populateNeighborhoods(boroughId = null) {
             // Re-attach event listeners for the new checkboxes
             const neighborhoodCheckboxes = document.querySelectorAll('.neighborhood-list input[type="checkbox"]');
             neighborhoodCheckboxes.forEach(checkbox => {
-                checkbox.addEventListener('change', applyFilters);
+                checkbox.addEventListener('change', function() {
+                    updateNeighborhoodChips();
+                    applyFilters();
+                });
             });
 
             console.log('✅ Neighborhoods populated from database and event listeners attached');
@@ -947,8 +971,64 @@ async function populateNeighborhoods(boroughId = null) {
     }
 }
 
+// Update the visual display of selected neighborhood chips
+function updateNeighborhoodChips() {
+    const chipsContainer = document.getElementById('selectedNeighborhoodsChips');
+    if (!chipsContainer) return;
+
+    // Get all checked neighborhood checkboxes
+    const checkedBoxes = document.querySelectorAll('.neighborhood-list input[type="checkbox"]:checked');
+
+    // Clear existing chips
+    chipsContainer.innerHTML = '';
+
+    // Create chip for each selected neighborhood
+    checkedBoxes.forEach(checkbox => {
+        const neighborhoodName = checkbox.parentElement.textContent.trim();
+        const neighborhoodId = checkbox.value;
+
+        const chip = document.createElement('div');
+        chip.className = 'neighborhood-chip';
+        chip.dataset.neighborhoodId = neighborhoodId;
+
+        const chipText = document.createElement('span');
+        chipText.textContent = neighborhoodName;
+
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'neighborhood-chip-remove';
+        removeBtn.innerHTML = '×';
+        removeBtn.setAttribute('aria-label', `Remove ${neighborhoodName}`);
+
+        // Handle chip removal
+        removeBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            // Uncheck the corresponding checkbox
+            checkbox.checked = false;
+            // Update the display and apply filters
+            updateNeighborhoodChips();
+            applyFilters();
+        });
+
+        chip.appendChild(chipText);
+        chip.appendChild(removeBtn);
+        chipsContainer.appendChild(chip);
+    });
+}
+
+// Clear all neighborhood selections
+function clearNeighborhoodSelections() {
+    // Uncheck all neighborhood checkboxes
+    const neighborhoodCheckboxes = document.querySelectorAll('.neighborhood-list input[type="checkbox"]');
+    neighborhoodCheckboxes.forEach(checkbox => {
+        checkbox.checked = false;
+    });
+
+    // Clear the chips display
+    updateNeighborhoodChips();
+}
+
 // Update listing count
-function updateListingCount(count = listingsData.length, fallbackCount = null) {
+function updateListingCount(count = 0, fallbackCount = null) {
     const countElement = document.getElementById('listingCount');
     if (countElement) {
         if (fallbackCount !== null) {
@@ -1265,7 +1345,7 @@ function showMapPlaceholder(mapElement) {
             </div>
             <h3 style="margin: 0 0 0.5rem 0; color: #31135D; font-weight: 600;">Map Preview</h3>
             <p style="margin: 0 0 1rem 0; line-height: 1.5;">
-                NYC area with ${typeof listingsData !== 'undefined' ? listingsData.length : 0} property listings
+                NYC area with ${window.currentListings ? window.currentListings.length : 0} property listings
             </p>
             <p style="margin: 0; font-size: 0.9rem;">
                 Add your Google Maps API key to enable interactive map
@@ -1320,235 +1400,8 @@ window.addEventListener('load', function() {
     }, 5000); // Increased timeout to allow more time for initialization
 });
 
-// Debug function to test API connectivity
-function testGoogleMapsAPI() {
-    console.log('🧪 Testing Google Maps API connectivity...');
-
-    // Test basic API availability
-    if (typeof google === 'undefined') {
-        console.error('❌ Google is not defined');
-        return false;
-    }
-
-    if (!google.maps) {
-        console.error('❌ google.maps is not available');
-        return false;
-    }
-
-    try {
-        // Test creating a basic LatLng object
-        const testLatLng = new google.maps.LatLng(40.7580, -73.9855);
-        console.log('✅ Basic LatLng test passed:', testLatLng.toString());
-        return true;
-    } catch (error) {
-        console.error('❌ Basic API test failed:', error);
-        return false;
-    }
-}
-
-// Make test function available globally
-window.testGoogleMapsAPI = testGoogleMapsAPI;
-
 // Make initMap globally available for Google Maps callback
 window.initMap = initMap;
-
-// Day Selector Functions
-function initializeDaySelector() {
-    // Load state from URL parameters
-    loadStateFromURL();
-    updateDayBadges();
-    updateCheckinCheckout();
-}
-
-function loadStateFromURL() {
-    const params = new URLSearchParams(window.location.search);
-    const daysParam = params.get('days-selected');
-
-    if (daysParam) {
-        // Convert from Bubble format (1-based) to JavaScript format (0-based)
-        const bubbleDays = daysParam.split(',').map(d => parseInt(d.trim()));
-        selectedDays = bubbleDays.map(day => day - 1).filter(d => d >= 0 && d <= 6);
-    } else {
-        // Default to Monday-Friday (indices 1-5)
-        selectedDays = [1, 2, 3, 4, 5];
-    }
-}
-
-function toggleDay(dayIndex) {
-    // Prevent unselection if only 2 days are selected
-    if (selectedDays.includes(dayIndex)) {
-        if (selectedDays.length <= 2) {
-            console.log('Cannot unselect: Minimum 2 days must remain selected');
-            return;
-        }
-        selectedDays = selectedDays.filter(d => d !== dayIndex);
-    } else {
-        selectedDays.push(dayIndex);
-        selectedDays.sort((a, b) => a - b);
-    }
-
-    updateDayBadges();
-    updateCheckinCheckout();
-    updateAllDisplayedPrices(); // Update prices when day selection changes
-    applyFilters(); // Reapply filters when days change
-}
-
-function updateDayBadges() {
-    const badges = document.querySelectorAll('.day-badge');
-    badges.forEach((badge, index) => {
-        const isSelected = selectedDays.includes(index);
-
-        if (isSelected) {
-            badge.classList.add('active');
-        } else {
-            badge.classList.remove('active');
-        }
-    });
-}
-
-function updateCheckinCheckout() {
-    const checkinCheckoutEl = document.getElementById('checkinCheckout');
-
-    // Skip if element doesn't exist (React Schedule Selector handles its own display)
-    if (!checkinCheckoutEl) {
-        return;
-    }
-
-    if (selectedDays.length === 0) {
-        checkinCheckoutEl.style.display = 'none';
-        return;
-    }
-
-    // Check if days are continuous
-    if (!areDaysContinuous(selectedDays)) {
-        checkinCheckoutEl.innerHTML = `
-            <span style="color: #e74c3c;">⚠️ Please select continuous days</span>
-        `;
-        checkinCheckoutEl.style.display = 'flex';
-        return;
-    }
-
-    let checkinDay, checkoutDay;
-
-    if (selectedDays.length === 1) {
-        checkinDay = dayNames[selectedDays[0]];
-        checkoutDay = dayNames[selectedDays[0]];
-    } else {
-        const sortedDays = [...selectedDays].sort((a, b) => a - b);
-        const hasSunday = sortedDays.includes(0);
-        const hasSaturday = sortedDays.includes(6);
-
-        // Check if this is a wrap-around case (e.g., Fri-Sat-Sun-Mon)
-        if (hasSunday && hasSaturday && sortedDays.length < 7) {
-            // Find the gap in the middle of the week
-            const allDays = [0, 1, 2, 3, 4, 5, 6];
-            let gapStart = -1;
-            let gapEnd = -1;
-
-            for (let i = 0; i <= 6; i++) {
-                if (!sortedDays.includes(i)) {
-                    if (gapStart === -1) gapStart = i;
-                    gapEnd = i;
-                }
-            }
-
-            if (gapStart !== -1) {
-                // Check-in is the first day after the gap
-                let checkinDayIndex = sortedDays.find(day => day > gapEnd) || 0;
-                // Check-out is the last day before the gap
-                let checkoutDayIndex = sortedDays.filter(day => day < gapStart).pop() || 6;
-
-                checkinDay = dayNames[checkinDayIndex];
-                checkoutDay = dayNames[checkoutDayIndex];
-            } else {
-                checkinDay = dayNames[sortedDays[0]];
-                checkoutDay = dayNames[sortedDays[sortedDays.length - 1]];
-            }
-        } else {
-            // Non-wrap-around case
-            checkinDay = dayNames[sortedDays[0]];
-            checkoutDay = dayNames[sortedDays[sortedDays.length - 1]];
-        }
-    }
-
-    // Update display
-    const checkinDayEl = document.getElementById('checkinDay');
-    const checkoutDayEl = document.getElementById('checkoutDay');
-
-    if (!checkinDayEl || !checkoutDayEl) {
-        // Restore the full HTML structure if it was destroyed
-        checkinCheckoutEl.innerHTML = `
-            <span><strong>Check-in:</strong> <span id="checkinDay">${checkinDay}</span></span>
-            <span class="separator">•</span>
-            <span><strong>Check-out:</strong> <span id="checkoutDay">${checkoutDay}</span></span>
-        `;
-    } else {
-        // Just update text if structure exists
-        checkinDayEl.textContent = checkinDay;
-        checkoutDayEl.textContent = checkoutDay;
-    }
-    checkinCheckoutEl.style.display = 'flex';
-}
-
-function areDaysContinuous(days) {
-    console.log('areDaysContinuous called with:', days);
-
-    // Edge cases
-    if (days.length <= 1) {
-        console.log('-> Length <= 1, returning true');
-        return true;
-    }
-
-    if (days.length >= 6) {
-        console.log('-> Length >= 6, returning true');
-        return true;
-    }
-
-    const sortedDays = [...days].sort((a, b) => a - b);
-    console.log('-> Sorted days:', sortedDays);
-
-    // STEP 1: Check if selected days are continuous (regular check)
-    let isRegularContinuous = true;
-    for (let i = 1; i < sortedDays.length; i++) {
-        if (sortedDays[i] !== sortedDays[i-1] + 1) {
-            isRegularContinuous = false;
-            break;
-        }
-    }
-
-    if (isRegularContinuous) {
-        console.log('-> Regular continuous check passed');
-        return true;
-    }
-
-    // STEP 2: Check if UNSELECTED days are continuous (implies wrap-around)
-    console.log('-> Regular check failed, checking wrap-around via unselected days');
-
-    const allDays = [0, 1, 2, 3, 4, 5, 6];
-    const unselectedDays = allDays.filter(day => !sortedDays.includes(day));
-
-    if (unselectedDays.length === 0) {
-        // All days selected
-        return true;
-    }
-
-    console.log('-> Unselected days:', unselectedDays);
-
-    // Check if unselected days are continuous
-    const sortedUnselected = [...unselectedDays].sort((a, b) => a - b);
-    for (let i = 1; i < sortedUnselected.length; i++) {
-        if (sortedUnselected[i] !== sortedUnselected[i-1] + 1) {
-            console.log('-> Unselected days not continuous, selection is not valid');
-            return false;
-        }
-    }
-
-    console.log('-> Unselected days are continuous, selection wraps around!');
-    return true;
-}
-
-// Make toggleDay globally available
-window.toggleDay = toggleDay;
 
 // Cleanup function for intersection observer
 function cleanupLazyLoading() {
@@ -1573,14 +1426,9 @@ function openContactHostModal(listingId) {
         listing = window.currentListings.find(l => l.id === listingId);
     }
 
-    // Fallback to hardcoded data
-    if (!listing && typeof listingsData !== 'undefined') {
-        listing = listingsData.find(l => l.id === listingId);
-    }
-
     if (!listing) {
         console.error('❌ Listing not found:', listingId);
-        alert('Unable to open messaging. Listing not found.');
+        showToast('Unable to open messaging. Listing not found.', 'error');
         return;
     }
 
@@ -1592,7 +1440,7 @@ function openContactHostModal(listingId) {
         window.contactHostMessaging.open(listing, currentUser);
     } else {
         console.error('❌ Contact Host Messaging component not initialized');
-        alert('Unable to open messaging. Please refresh the page and try again.');
+        showToast('Unable to open messaging. Please refresh the page and try again.', 'error');
     }
 }
 
