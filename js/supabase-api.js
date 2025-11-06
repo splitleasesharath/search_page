@@ -353,6 +353,9 @@ class SupabaseAPI {
         const daysAvailable = dbListing['Days Available (List of Days)'] || [];
         const weeksOffered = dbListing['Weeks offered'] || 'Every week';
 
+        // Parse amenities from database fields
+        const amenities = this.parseAmenities(dbListing);
+
         return {
             id: id,
             title: name,
@@ -384,6 +387,7 @@ class SupabaseAPI {
             bedrooms: bedrooms,
             bathrooms: bathrooms,
             kitchen: kitchenType,
+            amenities: amenities,
             host: {
             name: hostName,
             image: hostImage,
@@ -502,6 +506,62 @@ class SupabaseAPI {
     }
 
     
+
+    /**
+     * Parse amenities from database fields and return prioritized list with icons
+     * @param {Object} dbListing - Raw listing from database
+     * @returns {Array} Array of amenity objects with icon, name, and priority
+     */
+    parseAmenities(dbListing) {
+        // Amenities map with icons and priority (lower = higher priority)
+        const amenitiesMap = {
+            'wifi': { icon: '📶', name: 'WiFi', priority: 1 },
+            'furnished': { icon: '🛋️', name: 'Furnished', priority: 2 },
+            'pet': { icon: '🐕', name: 'Pet-Friendly', priority: 3 },
+            'dog': { icon: '🐕', name: 'Pet-Friendly', priority: 3 },
+            'cat': { icon: '🐕', name: 'Pet-Friendly', priority: 3 },
+            'washer': { icon: '🧺', name: 'Washer/Dryer', priority: 4 },
+            'dryer': { icon: '🧺', name: 'Washer/Dryer', priority: 4 },
+            'parking': { icon: '🅿️', name: 'Parking', priority: 5 },
+            'elevator': { icon: '🏢', name: 'Elevator', priority: 6 },
+            'gym': { icon: '💪', name: 'Gym', priority: 7 },
+            'doorman': { icon: '🚪', name: 'Doorman', priority: 8 },
+            'ac': { icon: '❄️', name: 'A/C', priority: 9 },
+            'air conditioning': { icon: '❄️', name: 'A/C', priority: 9 },
+            'kitchen': { icon: '🍳', name: 'Kitchen', priority: 10 },
+            'balcony': { icon: '🌿', name: 'Balcony', priority: 11 },
+            'workspace': { icon: '💻', name: 'Workspace', priority: 12 },
+            'desk': { icon: '💻', name: 'Workspace', priority: 12 }
+        };
+
+        const amenities = [];
+        const foundAmenities = new Set(); // Track which amenities we've already added
+
+        // Check Features field (if it exists as a string or array)
+        const features = dbListing['Features'];
+        if (features) {
+            const featureText = typeof features === 'string' ? features.toLowerCase() : '';
+
+            for (const [key, amenity] of Object.entries(amenitiesMap)) {
+                if (featureText.includes(key) && !foundAmenities.has(amenity.name)) {
+                    amenities.push(amenity);
+                    foundAmenities.add(amenity.name);
+                }
+            }
+        }
+
+        // Check Kitchen Type field - if it's "Full Kitchen", add kitchen amenity
+        const kitchenType = dbListing['Kitchen Type'];
+        if (kitchenType && kitchenType.toLowerCase().includes('kitchen') && !foundAmenities.has('Kitchen')) {
+            amenities.push(amenitiesMap['kitchen']);
+            foundAmenities.add('Kitchen');
+        }
+
+        // Sort by priority (lower number = higher priority)
+        amenities.sort((a, b) => a.priority - b.priority);
+
+        return amenities;
+    }
 
     /**
      * Check if listing is new (created within last 30 days)

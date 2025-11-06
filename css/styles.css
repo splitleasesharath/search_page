@@ -616,7 +616,7 @@ body {
     border: 1px solid #f3f4f6;
     display: flex;
     flex-direction: row;
-    height: 260px;
+    height: 300px;
     position: relative;
 }
 
@@ -814,8 +814,85 @@ body {
 .listing-details {
     font-size: 14px;
     color: #666;
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;
     line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Amenity Icons */
+.listing-amenities {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    margin: 0.5rem 0;
+    flex-wrap: wrap;
+}
+
+.amenity-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: var(--bg-light);
+    border-radius: 6px;
+    font-size: 16px;
+    transition: all 0.2s ease;
+    cursor: help;
+    position: relative;
+}
+
+.amenity-icon:hover {
+    background: var(--primary-purple);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(49, 19, 93, 0.15);
+}
+
+.amenity-icon::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 0.5rem 0.75rem;
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    font-size: 12px;
+    white-space: nowrap;
+    border-radius: 4px;
+    margin-bottom: 8px;
+    z-index: 10;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.amenity-icon:hover::after {
+    opacity: 1;
+}
+
+.amenity-more-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 0.75rem;
+    height: 32px;
+    background: var(--primary-purple);
+    color: white;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.amenity-more-count:hover {
+    background: var(--primary-purple-hover);
+    transform: translateY(-2px);
 }
 
 .listing-footer {
@@ -881,20 +958,26 @@ body {
 
 .pricing-info {
     text-align: right;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
 }
 
 .starting-price {
-    font-size: 13px;
-    color: #666;
-    margin-bottom: 0.25rem;
+    font-size: 12px;
+    color: #888;
+    margin-bottom: 0;
     justify-content: flex-end;
+    display: flex;
+    align-items: center;
+    gap: 4px;
 }
 
 /* Hover effect when starting-price is clickable */
 .starting-price.info-trigger {
     transition: all 0.2s ease;
     padding: 4px 8px;
-    margin: -4px -8px 0.25rem -8px;
+    margin: -4px -8px 0 -8px;
     border-radius: 6px;
 }
 
@@ -909,15 +992,17 @@ body {
 }
 
 .full-price {
-    font-size: 20px;
-    font-weight: 600;
-    color: #222;
-    margin-bottom: 0.25rem;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--primary-purple);
+    margin-bottom: 0;
+    line-height: 1.2;
 }
 
 .availability-text {
-    font-size: 12px;
+    font-size: 11px;
     color: #999;
+    font-style: italic;
 }
 
 /* AI Research Card */

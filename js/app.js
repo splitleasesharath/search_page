@@ -316,6 +316,39 @@ function updateMapToMatchDisplayedCards() {
     window.updateMapMarkers(displayedListings);
 }
 
+// Render amenity icons with tooltips
+function renderAmenityIcons(amenities, maxVisible = 6) {
+    if (!amenities || amenities.length === 0) {
+        return '';
+    }
+
+    const visibleAmenities = amenities.slice(0, maxVisible);
+    const hiddenCount = Math.max(0, amenities.length - maxVisible);
+
+    let html = '<div class="listing-amenities">';
+
+    // Render visible amenities
+    visibleAmenities.forEach(amenity => {
+        html += `
+            <span class="amenity-icon" data-tooltip="${amenity.name}">
+                ${amenity.icon}
+            </span>
+        `;
+    });
+
+    // Add "more" counter if needed
+    if (hiddenCount > 0) {
+        html += `
+            <span class="amenity-more-count" title="Show all amenities">
+                +${hiddenCount} more
+            </span>
+        `;
+    }
+
+    html += '</div>';
+    return html;
+}
+
 // Create a listing card element
 async function createListingCard(listing) {
     const card = document.createElement('div');
@@ -368,6 +401,7 @@ async function createListingCard(listing) {
                 </div>
                 <h3 class="listing-title">${listing.title}</h3>
                 <p class="listing-type">${listing.type}${listing.squareFeet ? ` (${listing.squareFeet} SQFT)` : ''} - ${listing.maxGuests} guests max</p>
+                ${renderAmenityIcons(listing.amenities)}
                 <p class="listing-details">${listing.description}</p>
             </div>
             <div class="listing-footer">
